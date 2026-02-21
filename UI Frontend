@@ -1,0 +1,1001 @@
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+
+const DaylightJournal = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [demoTime, setDemoTime] = useState('morning'); // morning, afternoon, evening
+  const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
+  const [quickNote, setQuickNote] = useState('');
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [dreamSubmitted, setDreamSubmitted] = useState(false);
+  const [eveningSubmitted, setEveningSubmitted] = useState(false);
+  
+  // Use refs to store text values without causing re-renders
+  const dreamRef = useRef(null);
+  const eveningRef = useRef(null);
+  const [dreamText, setDreamText] = useState('');
+  const [eveningText, setEveningText] = useState('');
+  
+  // Static demo data - 30 days of entries (defined once, never changes)
+  const [entries] = useState([
+    { date: new Date(Date.now() - 29 * 86400000), mood: 'peaceful', dream: 'Flying over mountains made of glass', reflection: 'Had a wonderful conversation that made me think differently.', gratitude: 'Good health' },
+    { date: new Date(Date.now() - 28 * 86400000), mood: 'energetic', dream: 'Swimming with luminescent fish', reflection: 'Quiet day, but peaceful. Sometimes that\'s exactly what I need.', gratitude: 'Supportive friends' },
+    { date: new Date(Date.now() - 27 * 86400000), mood: 'reflective', dream: null, reflection: 'Pushed through something difficult. Proud of myself.', gratitude: 'Creative time' },
+    { date: new Date(Date.now() - 26 * 86400000), mood: 'grateful', dream: 'A library where books whispered secrets', reflection: 'Noticed the small things today - sunlight, good coffee.', gratitude: 'Nature' },
+    { date: new Date(Date.now() - 25 * 86400000), empty: true },
+    { date: new Date(Date.now() - 24 * 86400000), mood: 'creative', dream: 'Walking through a forest of giant flowers', reflection: 'Creative energy was flowing. Made progress on my project.', gratitude: 'Music' },
+    { date: new Date(Date.now() - 23 * 86400000), mood: 'calm', dream: 'Meeting an old friend in a strange city', reflection: 'Felt connected to the people around me.', gratitude: 'Good health' },
+    { date: new Date(Date.now() - 22 * 86400000), mood: 'inspired', dream: 'Building something impossible', reflection: 'Took time to rest without guilt.', gratitude: 'Supportive friends' },
+    { date: new Date(Date.now() - 21 * 86400000), mood: 'cozy', dream: 'A warm kitchen filled with familiar smells', reflection: 'Learned something new that excited me.', gratitude: 'Creative time' },
+    { date: new Date(Date.now() - 20 * 86400000), mood: 'peaceful', dream: null, reflection: 'Had a wonderful conversation that made me think differently.', gratitude: 'Nature' },
+    { date: new Date(Date.now() - 19 * 86400000), empty: true },
+    { date: new Date(Date.now() - 18 * 86400000), mood: 'energetic', dream: 'Flying over mountains made of glass', reflection: 'Quiet day, but peaceful.', gratitude: 'Music' },
+    { date: new Date(Date.now() - 17 * 86400000), mood: 'reflective', dream: 'Swimming with luminescent fish', reflection: 'Pushed through something difficult.', gratitude: 'Good health' },
+    { date: new Date(Date.now() - 16 * 86400000), mood: 'grateful', dream: 'A library where books whispered secrets', reflection: 'Noticed the small things today.', gratitude: 'Supportive friends' },
+    { date: new Date(Date.now() - 15 * 86400000), mood: 'creative', dream: null, reflection: 'Creative energy was flowing.', gratitude: 'Creative time' },
+    { date: new Date(Date.now() - 14 * 86400000), mood: 'calm', dream: 'Walking through a forest of giant flowers', reflection: 'Felt connected to the people around me.', gratitude: 'Nature' },
+    { date: new Date(Date.now() - 13 * 86400000), empty: true },
+    { date: new Date(Date.now() - 12 * 86400000), mood: 'inspired', dream: 'Meeting an old friend in a strange city', reflection: 'Took time to rest without guilt.', gratitude: 'Music' },
+    { date: new Date(Date.now() - 11 * 86400000), mood: 'cozy', dream: 'Building something impossible', reflection: 'Learned something new that excited me.', gratitude: 'Good health' },
+    { date: new Date(Date.now() - 10 * 86400000), mood: 'peaceful', dream: 'A warm kitchen filled with familiar smells', reflection: 'Had a wonderful conversation.', gratitude: 'Supportive friends' },
+    { date: new Date(Date.now() - 9 * 86400000), mood: 'energetic', dream: null, reflection: 'Quiet day, but peaceful.', gratitude: 'Creative time' },
+    { date: new Date(Date.now() - 8 * 86400000), mood: 'reflective', dream: 'Flying over mountains made of glass', reflection: 'Pushed through something difficult.', gratitude: 'Nature' },
+    { date: new Date(Date.now() - 7 * 86400000), empty: true },
+    { date: new Date(Date.now() - 6 * 86400000), mood: 'grateful', dream: 'Swimming with luminescent fish', reflection: 'Noticed the small things today.', gratitude: 'Music' },
+    { date: new Date(Date.now() - 5 * 86400000), mood: 'creative', dream: 'A library where books whispered secrets', reflection: 'Creative energy was flowing.', gratitude: 'Good health' },
+    { date: new Date(Date.now() - 4 * 86400000), mood: 'calm', dream: null, reflection: 'Felt connected to the people around me.', gratitude: 'Supportive friends' },
+    { date: new Date(Date.now() - 3 * 86400000), mood: 'inspired', dream: 'Walking through a forest of giant flowers', reflection: 'Took time to rest without guilt.', gratitude: 'Creative time' },
+    { date: new Date(Date.now() - 2 * 86400000), mood: 'cozy', dream: 'Meeting an old friend in a strange city', reflection: 'Learned something new that excited me.', gratitude: 'Nature' },
+    { date: new Date(Date.now() - 1 * 86400000), mood: 'peaceful', dream: 'Building something impossible', reflection: 'Had a wonderful conversation.', gratitude: 'Music' },
+    { date: new Date(), mood: 'grateful', dream: 'A warm kitchen filled with familiar smells', reflection: 'Today was a good day.', gratitude: 'Good health' },
+  ]);
+
+  // Calculate dominant mood from recent entries for theme
+  const recentMood = useMemo(() => {
+    const recent = entries.slice(-7).filter(e => !e.empty);
+    if (recent.length === 0) return 'peaceful';
+    const moodCounts = {};
+    recent.forEach(e => {
+      moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
+    });
+    return Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0][0];
+  }, [entries]);
+
+  // Theme colors based on mood - dark terminal aesthetic with subtle accents
+  const themes = {
+    peaceful: { bg: '#0a0f14', accent: '#4a9ead', text: '#c5d1d8', subtle: '#1a2a32' },
+    energetic: { bg: '#140a0a', accent: '#ad6a4a', text: '#d8c5c5', subtle: '#2a1a1a' },
+    reflective: { bg: '#0f0a14', accent: '#8a6aad', text: '#d1c5d8', subtle: '#1f1a2a' },
+    grateful: { bg: '#0a140f', accent: '#4aad6a', text: '#c5d8c9', subtle: '#1a2a1f' },
+    creative: { bg: '#14120a', accent: '#ad9a4a', text: '#d8d5c5', subtle: '#2a281a' },
+    calm: { bg: '#0a1210', accent: '#5aad8a', text: '#c5d8d1', subtle: '#1a2a25' },
+    inspired: { bg: '#120a10', accent: '#ad4a8a', text: '#d8c5d1', subtle: '#2a1a25' },
+    cozy: { bg: '#12100a', accent: '#ad8a5a', text: '#d8d1c5', subtle: '#2a251a' },
+  };
+
+  const theme = themes[recentMood] || themes.peaceful;
+  const streak = entries.filter(e => !e.empty).length;
+
+  const formatDate = (date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const NavBar = () => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: `linear-gradient(to top, ${theme.bg} 0%, ${theme.bg}ee 100%)`,
+      borderTop: `1px solid ${theme.accent}33`,
+      padding: '12px 0 28px 0',
+      display: 'flex',
+      justifyContent: 'space-around',
+      backdropFilter: 'blur(20px)',
+      zIndex: 100,
+    }}>
+      {[
+        { id: 'home', icon: '>', label: 'today' },
+        { id: 'history', icon: '#', label: 'history' },
+        { id: 'wrapped', icon: '*', label: 'wrapped' },
+      ].map(item => (
+        <button
+          key={item.id}
+          onClick={() => { setCurrentView(item.id); setSelectedHistoryDay(null); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            opacity: currentView === item.id ? 1 : 0.4,
+            transition: 'all 0.3s ease',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            backgroundColor: currentView === item.id ? `${theme.accent}20` : 'transparent',
+          }}
+        >
+          <span style={{ 
+            fontFamily: '"SF Mono", "Fira Code", monospace',
+            fontSize: '16px', 
+            color: theme.accent,
+          }}>{item.icon}</span>
+          <span style={{
+            fontFamily: '"SF Mono", "Fira Code", monospace',
+            fontSize: '12px',
+            color: theme.text,
+            letterSpacing: '0.05em',
+          }}>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+
+  // Demo time toggle
+  const DemoToggle = () => (
+    <div style={{
+      position: 'fixed',
+      top: '16px',
+      right: '16px',
+      background: theme.subtle,
+      border: `1px solid ${theme.accent}40`,
+      borderRadius: '4px',
+      padding: '4px',
+      display: 'flex',
+      gap: '2px',
+      zIndex: 200,
+      fontFamily: '"SF Mono", "Fira Code", monospace',
+    }}>
+      {['morning', 'afternoon', 'evening'].map(time => (
+        <button
+          key={time}
+          onClick={() => setDemoTime(time)}
+          style={{
+            background: demoTime === time ? theme.accent : 'transparent',
+            color: demoTime === time ? theme.bg : theme.text,
+            border: 'none',
+            borderRadius: '2px',
+            padding: '6px 10px',
+            fontSize: '11px',
+            cursor: 'pointer',
+            letterSpacing: '0.03em',
+          }}
+        >
+          {time === 'morning' ? 'am' : time === 'afternoon' ? 'pm' : 'eve'}
+        </button>
+      ))}
+    </div>
+  );
+
+  const Chip = ({ text, onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'transparent',
+        border: `1px solid ${theme.accent}50`,
+        borderRadius: '2px',
+        padding: '8px 12px',
+        fontFamily: '"SF Mono", "Fira Code", monospace',
+        fontSize: '12px',
+        color: theme.accent,
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.background = `${theme.accent}20`;
+        e.target.style.borderColor = theme.accent;
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.background = 'transparent';
+        e.target.style.borderColor = `${theme.accent}50`;
+      }}
+    >
+      {text}
+    </button>
+  );
+
+  const SuggestionCard = ({ icon, source, suggestion, micro, index }) => (
+    <div
+      onClick={() => setSelectedGoal(index)}
+      style={{
+        background: selectedGoal === index ? `${theme.accent}15` : theme.subtle,
+        border: `1px solid ${selectedGoal === index ? theme.accent : theme.accent + '30'}`,
+        borderRadius: '4px',
+        padding: '16px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        fontFamily: '"SF Mono", "Fira Code", monospace',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+        <span style={{ fontSize: '12px', color: theme.accent }}>{icon}</span>
+        <span style={{ fontSize: '10px', color: theme.text, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          {source}
+        </span>
+        {selectedGoal === index && (
+          <span style={{
+            marginLeft: 'auto',
+            background: theme.accent,
+            color: theme.bg,
+            fontSize: '9px',
+            padding: '3px 8px',
+            borderRadius: '2px',
+            letterSpacing: '0.05em',
+          }}>SELECTED</span>
+        )}
+      </div>
+      <p style={{ fontSize: '13px', color: theme.text, margin: '0 0 12px 0', lineHeight: 1.5, opacity: 0.9 }}>
+        {suggestion}
+      </p>
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        background: `${theme.accent}20`,
+        padding: '6px 10px',
+        borderRadius: '2px',
+      }}>
+        <span style={{ fontSize: '10px', color: theme.accent }}>→</span>
+        <span style={{ fontSize: '11px', color: theme.accent }}>{micro}</span>
+      </div>
+    </div>
+  );
+
+  const HomeView = () => {
+    const greeting = demoTime === 'morning' 
+      ? { symbol: '◐', text: 'good morning', sub: 'capture your dreams before they fade' }
+      : demoTime === 'afternoon'
+      ? { symbol: '○', text: 'good afternoon', sub: 'how is your day going?' }
+      : { symbol: '●', text: 'good evening', sub: 'time to reflect on your day' };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', paddingTop: '60px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+          <span style={{ 
+            fontSize: '48px', 
+            display: 'block', 
+            marginBottom: '16px',
+            color: theme.accent,
+            textShadow: `0 0 30px ${theme.accent}50`,
+          }}>{greeting.symbol}</span>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: 400,
+            color: theme.text,
+            margin: '0 0 8px 0',
+            letterSpacing: '0.05em',
+          }}>{greeting.text}</h1>
+          <p style={{
+            fontSize: '13px',
+            color: theme.text,
+            opacity: 0.5,
+            margin: '0 0 24px 0',
+            letterSpacing: '0.03em',
+          }}>{greeting.sub}</p>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: theme.subtle,
+            border: `1px solid ${theme.accent}30`,
+            borderRadius: '2px',
+            padding: '8px 16px',
+          }}>
+            <span style={{ fontSize: '14px' }}>🔥</span>
+            <span style={{ fontSize: '13px', color: theme.accent }}>
+              {streak} day streak
+            </span>
+          </div>
+        </div>
+
+        {/* Morning: Dream Journal */}
+        {demoTime === 'morning' && (
+          <div style={{
+            background: theme.subtle,
+            borderRadius: '4px',
+            padding: '24px',
+            border: `1px solid ${theme.accent}30`,
+          }}>
+            {!dreamSubmitted ? (
+              <>
+                <h2 style={{
+                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontSize: '14px',
+                  fontWeight: 400,
+                  color: theme.accent,
+                  margin: '0 0 4px 0',
+                  letterSpacing: '0.05em',
+                }}>$ dream --capture</h2>
+                <p style={{
+                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontSize: '12px',
+                  color: theme.text,
+                  opacity: 0.5,
+                  margin: '0 0 16px 0',
+                }}>what did you dream about?</p>
+                <textarea
+                  ref={dreamRef}
+                  id="dream-input"
+                  placeholder="even fragments help you remember better..."
+                  rows={4}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    border: `1px solid ${theme.accent}30`,
+                    borderRadius: '2px',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontSize: '14px',
+                    lineHeight: 1.8,
+                    color: theme.text,
+                    background: theme.bg,
+                    resize: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <Chip text="i was flying..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I was flying...'; }} />
+                  <Chip text="i felt..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I felt...'; }} />
+                  <Chip text="can't remember" onClick={() => { if(dreamRef.current) dreamRef.current.value = "Can't remember any dreams today."; }} />
+                </div>
+                <button
+                  onClick={() => { 
+                    const val = dreamRef.current?.value || '';
+                    if (val.trim()) {
+                      setDreamText(val); 
+                      setDreamSubmitted(true);
+                    }
+                  }}
+                  style={{
+                    marginTop: '20px',
+                    width: '100%',
+                    padding: '14px',
+                    background: theme.accent,
+                    color: theme.bg,
+                    border: 'none',
+                    borderRadius: '2px',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  lock it in →
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+                <span style={{ fontSize: '32px', display: 'block', marginBottom: '16px', color: theme.accent }}>✓</span>
+                <h2 style={{
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  color: theme.accent,
+                  margin: '0 0 12px 0',
+                }}>dream captured</h2>
+                <p style={{
+                  fontSize: '12px',
+                  color: theme.text,
+                  opacity: 0.5,
+                  margin: '0 0 20px 0',
+                  lineHeight: 1.6,
+                }}>
+                  the more you record, the more you'll remember
+                </p>
+                <div style={{
+                  background: theme.bg,
+                  border: `1px solid ${theme.accent}30`,
+                  borderRadius: '2px',
+                  padding: '16px',
+                  textAlign: 'left',
+                  color: theme.text,
+                  fontSize: '13px',
+                  lineHeight: 1.6,
+                  opacity: 0.8,
+                }}>
+                  <span style={{ color: theme.accent }}>→ </span>{dreamText}
+                </div>
+                <button
+                  onClick={() => setDreamSubmitted(false)}
+                  style={{
+                    marginTop: '16px',
+                    background: 'transparent',
+                    border: `1px solid ${theme.accent}40`,
+                    borderRadius: '2px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    color: theme.text,
+                    cursor: 'pointer',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                  }}
+                >
+                  edit
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Afternoon: Suggestions */}
+        {demoTime === 'afternoon' && (
+          <div style={{
+            background: theme.subtle,
+            borderRadius: '4px',
+            padding: '24px',
+            border: `1px solid ${theme.accent}30`,
+            fontFamily: '"SF Mono", "Fira Code", monospace',
+          }}>
+            <h2 style={{
+              fontSize: '14px',
+              fontWeight: 400,
+              color: theme.accent,
+              margin: '0 0 4px 0',
+            }}>$ suggest --from-history</h2>
+            <p style={{ fontSize: '12px', color: theme.text, opacity: 0.5, margin: '0 0 20px 0' }}>
+              based on what's been on your mind:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <SuggestionCard
+                index={0}
+                icon="◐"
+                source="from your dreams"
+                suggestion="you dreamed about flying yesterday — take a moment to think about what freedom means to you."
+                micro="5 min reflection"
+              />
+              <SuggestionCard
+                index={1}
+                icon="#"
+                source="from your notes"
+                suggestion="you had that lighthouse keeper story idea — brainstorm for 10 minutes?"
+                micro="write 100 words"
+              />
+            </div>
+            
+            {/* Quick note */}
+            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: `1px solid ${theme.accent}20` }}>
+              <p style={{ fontSize: '12px', color: theme.text, opacity: 0.5, margin: '0 0 12px 0' }}>
+                $ note --quick
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input
+                  type="text"
+                  value={quickNote}
+                  onChange={(e) => setQuickNote(e.target.value)}
+                  placeholder="capture a thought..."
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    border: `1px solid ${theme.accent}30`,
+                    borderRadius: '2px',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontSize: '13px',
+                    color: theme.text,
+                    background: theme.bg,
+                    outline: 'none',
+                  }}
+                />
+                <button style={{
+                  background: theme.accent,
+                  color: theme.bg,
+                  border: 'none',
+                  borderRadius: '2px',
+                  padding: '12px 20px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                }}>save</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Evening: Reflection */}
+        {demoTime === 'evening' && (
+          <div style={{
+            background: theme.subtle,
+            borderRadius: '4px',
+            padding: '24px',
+            border: `1px solid ${theme.accent}30`,
+          }}>
+            {!eveningSubmitted ? (
+              <>
+                <h2 style={{
+                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontSize: '14px',
+                  fontWeight: 400,
+                  color: theme.accent,
+                  margin: '0 0 4px 0',
+                  letterSpacing: '0.05em',
+                }}>$ reflect --today</h2>
+                <p style={{
+                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontSize: '12px',
+                  color: theme.text,
+                  opacity: 0.5,
+                  margin: '0 0 16px 0',
+                }}>how was your day?</p>
+                <textarea
+                  ref={eveningRef}
+                  id="evening-input"
+                  placeholder="what stood out? what are you grateful for?"
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    border: `1px solid ${theme.accent}30`,
+                    borderRadius: '2px',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontSize: '14px',
+                    lineHeight: 1.8,
+                    color: theme.text,
+                    background: theme.bg,
+                    resize: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <Chip text="i'm grateful for..." onClick={() => { if(eveningRef.current) eveningRef.current.value = "I'm grateful for..."; }} />
+                  <Chip text="today i learned..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'Today I learned...'; }} />
+                  <Chip text="a highlight was..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'A highlight was...'; }} />
+                </div>
+                <button
+                  onClick={() => { 
+                    const val = eveningRef.current?.value || '';
+                    if (val.trim()) {
+                      setEveningText(val); 
+                      setEveningSubmitted(true);
+                    }
+                  }}
+                  style={{
+                    marginTop: '20px',
+                    width: '100%',
+                    padding: '14px',
+                    background: theme.accent,
+                    color: theme.bg,
+                    border: 'none',
+                    borderRadius: '2px',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  lock it in →
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+                <span style={{ fontSize: '32px', display: 'block', marginBottom: '16px', color: theme.accent }}>●</span>
+                <h2 style={{
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  color: theme.accent,
+                  margin: '0 0 12px 0',
+                }}>day complete</h2>
+                <p style={{
+                  fontSize: '12px',
+                  color: theme.text,
+                  opacity: 0.5,
+                  margin: '0 0 20px 0',
+                  lineHeight: 1.6,
+                }}>
+                  another day of growth recorded. rest well.
+                </p>
+                <div style={{
+                  background: theme.bg,
+                  border: `1px solid ${theme.accent}30`,
+                  borderRadius: '2px',
+                  padding: '16px',
+                  textAlign: 'left',
+                  color: theme.text,
+                  fontSize: '13px',
+                  lineHeight: 1.6,
+                  opacity: 0.8,
+                }}>
+                  <span style={{ color: theme.accent }}>→ </span>{eveningText}
+                </div>
+                <div style={{
+                  marginTop: '20px',
+                  padding: '12px',
+                  background: `${theme.accent}15`,
+                  border: `1px solid ${theme.accent}30`,
+                  borderRadius: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                }}>
+                  <span style={{ fontSize: '16px' }}>🔥</span>
+                  <span style={{ fontSize: '14px', color: theme.accent }}>
+                    {streak + 1} day streak
+                  </span>
+                </div>
+                <button
+                  onClick={() => setEveningSubmitted(false)}
+                  style={{
+                    marginTop: '16px',
+                    background: 'transparent',
+                    border: `1px solid ${theme.accent}40`,
+                    borderRadius: '2px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    color: theme.text,
+                    cursor: 'pointer',
+                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                  }}
+                >
+                  edit
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const HistoryView = () => {
+    const weeks = [];
+    for (let i = 0; i < entries.length; i += 7) {
+      weeks.push(entries.slice(i, i + 7));
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+        <div style={{ paddingTop: '60px', textAlign: 'center' }}>
+          <h1 style={{
+            fontSize: '20px',
+            fontWeight: 400,
+            color: theme.accent,
+            margin: '0 0 8px 0',
+            letterSpacing: '0.05em',
+          }}>$ history --all</h1>
+          <p style={{
+            fontSize: '12px',
+            color: theme.text,
+            opacity: 0.5,
+            margin: 0,
+          }}>tap any day to revisit</p>
+        </div>
+
+        {/* Calendar grid */}
+        <div style={{
+          background: theme.subtle,
+          borderRadius: '4px',
+          padding: '20px',
+          border: `1px solid ${theme.accent}30`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            {['s', 'm', 't', 'w', 't', 'f', 's'].map((d, i) => (
+              <span key={i} style={{
+                width: '36px',
+                textAlign: 'center',
+                fontSize: '10px',
+                color: theme.accent,
+                opacity: 0.6,
+                textTransform: 'uppercase',
+              }}>{d}</span>
+            ))}
+          </div>
+          
+          {weeks.map((week, wi) => (
+            <div key={wi} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              {week.map((day, di) => {
+                const isToday = day.date.toDateString() === new Date().toDateString();
+                const hasEntry = !day.empty;
+                const dayTheme = hasEntry ? themes[day.mood] : null;
+                
+                return (
+                  <button
+                    key={di}
+                    onClick={() => !day.empty && setSelectedHistoryDay(day)}
+                    disabled={day.empty}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '2px',
+                      border: isToday ? `1px solid ${theme.accent}` : `1px solid transparent`,
+                      background: hasEntry 
+                        ? `${dayTheme.accent}30`
+                        : `${theme.text}10`,
+                      cursor: hasEntry ? 'pointer' : 'default',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      color: hasEntry ? dayTheme.accent : `${theme.text}30`,
+                      transition: 'all 0.2s ease',
+                      fontFamily: '"SF Mono", "Fira Code", monospace',
+                    }}
+                  >
+                    {day.date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Selected day detail */}
+        {selectedHistoryDay && (
+          <div style={{
+            background: theme.subtle,
+            borderRadius: '4px',
+            padding: '24px',
+            border: `1px solid ${theme.accent}`,
+            animation: 'fadeIn 0.3s ease',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{
+                fontSize: '14px',
+                fontWeight: 400,
+                color: theme.accent,
+                margin: 0,
+              }}>{formatDate(selectedHistoryDay.date)}</h3>
+              <span style={{
+                background: `${themes[selectedHistoryDay.mood].accent}30`,
+                color: themes[selectedHistoryDay.mood].accent,
+                padding: '4px 10px',
+                borderRadius: '2px',
+                fontSize: '11px',
+              }}>{selectedHistoryDay.mood}</span>
+            </div>
+
+            {selectedHistoryDay.dream && (
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  // dream
+                </p>
+                <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.8 }}>
+                  {selectedHistoryDay.dream}
+                </p>
+              </div>
+            )}
+
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                // reflection
+              </p>
+              <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.8 }}>
+                {selectedHistoryDay.reflection}
+              </p>
+            </div>
+
+            <div style={{
+              background: theme.bg,
+              borderRadius: '2px',
+              padding: '12px',
+              border: `1px solid ${theme.accent}20`,
+            }}>
+              <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '4px', textTransform: 'uppercase' }}>
+                // grateful
+              </p>
+              <p style={{ fontSize: '12px', color: theme.text, margin: 0, opacity: 0.7 }}>
+                {selectedHistoryDay.gratitude}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setSelectedHistoryDay(null)}
+              style={{
+                marginTop: '16px',
+                background: 'transparent',
+                border: `1px solid ${theme.accent}40`,
+                borderRadius: '2px',
+                padding: '10px 20px',
+                fontSize: '12px',
+                color: theme.text,
+                cursor: 'pointer',
+                width: '100%',
+                fontFamily: '"SF Mono", "Fira Code", monospace',
+              }}
+            >close</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const WrappedView = () => {
+    const recentEntries = entries.filter(e => !e.empty).slice(-7);
+    const moodCounts = {};
+    recentEntries.forEach(e => {
+      moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
+    });
+    const topMoods = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(m => m[0]);
+    
+    const dreamsRemembered = recentEntries.filter(e => e.dream).length;
+    const totalWords = recentEntries.reduce((acc, e) => {
+      return acc + (e.dream?.split(' ').length || 0) + (e.reflection?.split(' ').length || 0);
+    }, 0);
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '60px',
+          paddingBottom: '10px',
+        }}>
+          <p style={{
+            fontSize: '11px',
+            color: theme.text,
+            opacity: 0.4,
+            marginBottom: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+          }}>this week</p>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: 400,
+            color: theme.accent,
+            margin: '0 0 4px 0',
+            letterSpacing: '0.05em',
+            textShadow: `0 0 40px ${theme.accent}50`,
+          }}>* wrapped *</h1>
+        </div>
+
+        {/* Big stats */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+        }}>
+          {[
+            { label: 'days logged', value: recentEntries.length, symbol: '>' },
+            { label: 'dreams', value: dreamsRemembered, symbol: '◐' },
+            { label: 'words', value: totalWords, symbol: '#' },
+            { label: 'streak', value: streak, symbol: '🔥' },
+          ].map((stat, i) => (
+            <div key={i} style={{
+              background: theme.subtle,
+              borderRadius: '4px',
+              padding: '20px',
+              textAlign: 'center',
+              border: `1px solid ${theme.accent}20`,
+            }}>
+              <span style={{ fontSize: '16px', display: 'block', marginBottom: '8px', color: theme.accent }}>{stat.symbol}</span>
+              <p style={{
+                fontSize: '32px',
+                fontWeight: 400,
+                color: theme.text,
+                margin: '0 0 4px 0',
+              }}>{stat.value}</p>
+              <p style={{
+                fontSize: '10px',
+                color: theme.text,
+                opacity: 0.5,
+                margin: 0,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+              }}>{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Mood breakdown */}
+        <div style={{
+          background: theme.subtle,
+          borderRadius: '4px',
+          padding: '20px',
+          border: `1px solid ${theme.accent}20`,
+        }}>
+          <h3 style={{
+            fontSize: '12px',
+            fontWeight: 400,
+            color: theme.accent,
+            margin: '0 0 16px 0',
+          }}>// your vibes</h3>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {topMoods.map((mood, i) => (
+              <span key={i} style={{
+                background: `${themes[mood].accent}25`,
+                color: themes[mood].accent,
+                padding: '8px 16px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                border: `1px solid ${themes[mood].accent}40`,
+              }}>{mood}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Insight */}
+        <div style={{
+          background: `${theme.accent}10`,
+          borderRadius: '4px',
+          padding: '20px',
+          borderLeft: `2px solid ${theme.accent}`,
+        }}>
+          <h3 style={{
+            fontSize: '12px',
+            fontWeight: 400,
+            color: theme.accent,
+            margin: '0 0 12px 0',
+          }}>// insight</h3>
+          <p style={{
+            fontSize: '13px',
+            color: theme.text,
+            margin: 0,
+            lineHeight: 1.7,
+            opacity: 0.9,
+          }}>
+            you've been feeling most <span style={{ color: theme.accent }}>{topMoods[0]}</span> this week. 
+            your dreams have featured themes of exploration and freedom. 
+            consider: what new territory are you ready to explore?
+          </p>
+        </div>
+
+        {/* Streak celebration */}
+        <div style={{
+          background: theme.bg,
+          borderRadius: '4px',
+          padding: '28px',
+          textAlign: 'center',
+          border: `1px solid ${theme.accent}`,
+          boxShadow: `0 0 40px ${theme.accent}20`,
+        }}>
+          <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🔥</span>
+          <p style={{
+            fontSize: '20px',
+            fontWeight: 400,
+            color: theme.accent,
+            margin: '0 0 6px 0',
+          }}>{streak} day streak</p>
+          <p style={{
+            fontSize: '12px',
+            color: theme.text,
+            opacity: 0.5,
+            margin: 0,
+          }}>keep going — you're building something meaningful</p>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: theme.bg,
+      fontFamily: '"SF Mono", "Fira Code", Consolas, monospace',
+      transition: 'background 0.5s ease',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        ::placeholder { color: ${theme.text}40; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: ${theme.bg}; }
+        ::-webkit-scrollbar-thumb { background: ${theme.accent}40; border-radius: 3px; }
+      `}</style>
+      
+      <DemoToggle />
+      
+      <div style={{
+        maxWidth: '480px',
+        margin: '0 auto',
+        padding: '20px 20px 120px 20px',
+      }}>
+        {currentView === 'home' && <HomeView />}
+        {currentView === 'history' && <HistoryView />}
+        {currentView === 'wrapped' && <WrappedView />}
+      </div>
+      
+      <NavBar />
+    </div>
+  );
+};
+
+export default DaylightJournal;

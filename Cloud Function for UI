@@ -12,7 +12,6 @@ exports.generateGoalFromDream = onRequest(async (req, res) => {
   try {
     // 🔐 1️⃣ Verify Firebase Auth Token
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -23,14 +22,12 @@ exports.generateGoalFromDream = onRequest(async (req, res) => {
 
     // 📝 2️⃣ Get dream text from request
     const { dreamText } = req.body;
-
     if (!dreamText || dreamText.trim() === "") {
       return res.status(400).json({ error: "Dream text is required" });
     }
 
     // 🤖 3️⃣ Call Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
 A user shared this dream:
 "${dreamText}"
@@ -39,6 +36,7 @@ Turn this into:
 1. A clear actionable goal
 2. 3 short milestones
 3. A short motivational message
+
 Return it clearly formatted.
 `;
 
@@ -46,27 +44,28 @@ Return it clearly formatted.
     const aiText = result.response.text();
 
     // 💾 4️⃣ Store dream + AI output in Firestore
-    const dreamRef = await admin.firestore()
+    const dreamRef = await admin
+      .firestore()
       .collection("users")
       .doc(uid)
       .collection("dreams")
       .add({
         dreamText,
         aiResponse: aiText,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
     // 📤 5️⃣ Send AI response back to frontend
     return res.status(200).json({
       message: "Dream stored successfully",
       dreamId: dreamRef.id,
-      aiResponse: aiText
+      aiResponse: aiText,
     });
-
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
-      error: "Something went wrong"
+      error: "Something went wrong",
     });
   }
 });
+

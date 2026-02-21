@@ -10,7 +10,7 @@ const DaylightJournal = () => {
   const [dreamSubmitted, setDreamSubmitted] = useState(false);
   const [eveningSubmitted, setEveningSubmitted] = useState(false);
   
-  // Use refs to store text values without causing re-renders
+  // Use refs to store text values without causing re-render
   const dreamRef = useRef(null);
   const eveningRef = useRef(null);
   const [dreamText, setDreamText] = useState('');

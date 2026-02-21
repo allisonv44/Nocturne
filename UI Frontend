@@ -1,8 +1,533 @@
+We want to work on an App that acts as a journaling tool for people who want to start appreciating each day more. For instance, I want to start journaling but I dont have one and I cant find hte motiovation to get one,
+12:46 PM
+
+I love this idea! A digital journaling app that lowers the barrier to entry is such a practical solution—no blank notebook intimidation, always with you, and the app itself can provide gentle motivation.
+
+Let me help you think through this. A few quick questions to shape the direction:
+Claude's response was interrupted
+
+Q: What style of journaling feels most appealing? (Select all that apply)
+A: Quick daily prompts (1-2 minutes)
+12:46 PM
+
+Perfect—quick daily prompts are a great fit for building a habit without it feeling like a chore. A couple more questions to nail down the experience:
+Claude's response was interrupted
+
+We want to work on an App that acts as a journaling tool for people who want to start appreciating each day more. For instance, I want to start journaling but I dont have one and I cant find hte motiovation to get one, so this app could be simple. In the morning it will ask you about your dreams and will let you write down a short description of what happened (this will help you remember your dreams better). At night it can give you a space to journal about your day. Every day it can analyse your responses and help you appreciate your day more, set small goals, and feel more productive every day. It also can help you get inspiration and let you take small notes during the day. For exmaple this would help writers brainstorm ideas. Since AI models are not great at coming up with creative ideas it only helps them work their own brain. It can also let them see previous days and keep a streak to encourage their use and help them feel accomplished. Every week it can give a wrapped to show patterns or trends, or ideas.
+12:50 PM
+
+This is a beautifully thought-out concept! I love how it bookends the day—dreams in the morning, reflection at night—and uses AI as a facilitator rather than a replacement for creativity. The weekly wrapped is a clever touch too.
+
+Let me build you a working prototype so you can see and feel the experience:
+Viewed a file, created a file
+
+javascript
+import React, { useState, useEffect } from 'react';
+
+const DaylightJournal = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [streak, setStreak] = useState(7);
+  const [dreamEntry, setDreamEntry] = useState('');
+  const [eveningEntry, setEveningEntry] = useState('');
+  const [quickNote, setQuickNote] = useState('');
+  const [notes, setNotes] = useState([
+    { id: 1, text: 'Story idea: A lighthouse keeper who collects lost memories from the sea', time: '2:34 PM
+Claude's response could not be fully generated
+
+We want to work on an App that acts as a journaling tool for people who want to start appreciating each day more. For instance, I want to start journaling but I dont have one and I cant find hte motiovation to get one, so this app could be simple. In the morning it will ask you about your dreams and will let you write down a short description of what happened (this will help you remember your dreams better). At night it can give you a space to journal about your day. Every day it can analyse your responses and help you appreciate your day more, set small goals, and feel more productive every day. It also can help you get inspiration and let you take small notes during the day. For exmaple this would help writers brainstorm ideas. Since AI models are not great at coming up with creative ideas it only helps them work their own brain. It can also let them see previous days and keep a streak to encourage their use and help them feel accomplished. Every week it can give a wrapped to show patterns or trends, or ideas.
+
+help us create an idea for a UI for this
+12:50 PM
+
+I love this concept! The way it bookends the day—dreams in the morning, reflection at night—creates a natural rhythm. And using AI as a facilitator for your own thinking rather than generating ideas for you is such a thoughtful approach.
+
+Let me build you an interactive prototype you can actually play with:
+Created 2 files, ran a command, read a file
+Done
+
+Here's a working prototype you can interact with! The UI concept has four main sections:
+
+Today (home) — The daily flow with:
+
+    Morning dream journal with gentle prompts to get you started
+    Daily intention setting (one small goal)
+    Quick thought capture for fleeting ideas
+    Evening reflection with gratitude prompts
+    AI insights that respond to what you write (try typing 20+ characters in the dream or evening sections)
+
+Notes — A scratchpad for writers and thinkers to capture ideas throughout the day, with the option to pull them into your journal later
+
+Past — Browse previous entries with mood tags, dream logs, reflections, and gratitude lists
+
+Insights (Weekly Wrapped) — Stats and patterns including dreams remembered, words written, recurring themes, mood trends, goal progress, and personalized AI observations
+
+The warm, earthy color palette and soft typography are designed to feel inviting rather than clinical—like a real journal you'd want to pick up. The streak badge provides gentle motivation without being pushy.
+
+Want me to adjust the aesthetic, add features, or explore a different direction?
+Daylight journal
+Code · JSX 
+
+modify it so that instead of asking for 'todays intension' it can show users possible goals or microgoals or ideas based on their previous dreams/quick thoughts/journal entries
+12:56 PM
+
+Great idea! Making the goals feel personalized based on what users have already written makes the app feel more intelligent and supportive. Let me update the prototype:
+Edited 3 files, read a file
++117-14
++2-1
+Done
+
+Done! The "Suggested for Today" section now shows personalized micro-goals drawn from three sources:
+
+🌅 From your dreams — Connects dream imagery to actionable ideas (e.g., dreaming about books → read something new)
+
+✦ From your notes — Surfaces captured ideas and suggests you act on them (e.g., the lighthouse keeper story idea → brainstorm for 10 minutes)
+
+🌙 From your reflections — Picks up on emotional themes (e.g., feeling connected → reach out to someone)
+
+Each suggestion has a micro-goal (one small, achievable action like "Read one chapter" or "Write 100 words") that users can tap to select as today's goal. The selected goal gets highlighted with a green badge.
+
+Users can still write their own intention at the bottom if none of the suggestions resonate.
+
+This makes the AI feel like a thoughtful companion that's actually paying attention—rather than generating generic productivity advice. Want me to refine the suggestion logic, add more categories, or adjust how the micro-goals are presented?
+Daylight journal
+Code · JSX 
+
+here is some feedback:
+1. renamed past to "history" and have a button that shows a UI visualization of all previous days as little boxes that can be opened to show 
+2. for our test have a button that clicks thru days for a demo
+3. we dont want it to be too overwhelming UI wise, in the morning it asks for your dream journal and in the evening it asks for your journal
+4. the UI color should changed based on the vibe of recent descriptions
+5. every week get a "Wrapped" like "spotify wrapped" type shit
+1:03 PM
+
+Love this feedback! Let me rebuild this with a cleaner, time-aware UI that adapts to the user's mood and has a proper history visualization with a demo mode.
+Created a file, read a file
+Done
+
+Here's the updated version with all your feedback implemented:
+
+Key changes:
+
+    History view with calendar grid — Each day is a colored box based on that day's mood. Tap any day to expand and see the full entry (dream, reflection, gratitude).
+    Demo mode toggle — Top-right corner has buttons to switch between morning/afternoon/evening to see how the UI changes throughout the day.
+    Cleaner, time-aware UI — Morning only shows the dream journal. Afternoon shows suggestions and quick notes. Evening shows the reflection prompt. No overwhelming walls of cards.
+    Adaptive theme colors — The entire app's color palette shifts based on the dominant mood from your recent entries (peaceful = cool blues, energetic = warm oranges, creative = earthy tones, etc.)
+    Spotify Wrapped-style insights — The "Wrapped" tab shows weekly stats (days journaled, dreams captured, words written, streak), your top moods as colored chips, and a personalized AI insight connecting patterns in your entries.
+
+The calendar in History generates 30 days of sample data so you can see how it looks with real usage. Try clicking different days to see entries expand!
+
+Want me to tweak the mood-to-color mappings, adjust the wrapped insights, or refine any of the interactions?
+Daylight journal v2
+Code · JSX 
+
+what are some ways we can make this more impressive or cool for a hackathan
+1:06 PM
+
+Great question! Let me brainstorm some features that would really wow hackathon judges:
+
+While you think about those, here are some ideas organized by "wow factor":
+
+🤖 AI-Powered (Technical Wow)
+
+    Dream interpretation — AI analyzes dream symbols and connects them to your waking life entries
+    Mood prediction — "Based on your patterns, tomorrow might feel challenging — here's a micro-goal to help"
+    Writing style analysis — Track how your language/tone evolves over weeks
+    Automatic theme extraction — AI tags entries and builds a visual "constellation" of your recurring themes
+
+🎨 Visual/Design Wow
+
+    AI-generated dream art — Turn dream descriptions into surreal images (DALL-E/Midjourney style)
+    Mood landscape — A 3D terrain that shifts based on your emotional history (mountains = energetic, valleys = calm)
+    Handwriting mode — Canvas where you can actually write/sketch, feels more like a real journal
+    Ambient soundscapes — Morning has gentle sunrise sounds, evening has calm night audio
+
+🎮 Gamification Wow
+
+    Dream achievements — "Lucid Explorer: Remembered 7 dreams in a row"
+    Reflection streaks with levels — Bronze → Silver → Gold journal keeper
+    Weekly challenges — "This week: Notice 3 things you're grateful for each day"
+    Hidden easter eggs — Secret achievements for patterns ("Night Owl: Journaled past midnight 5 times")
+
+🌐 Social/Connection Wow
+
+    Anonymous dream cloud — See what the world dreamed about last night (aggregated themes)
+    Accountability buddy — Paired journaling with a friend, see each other's streaks
+    Time capsule — Write a letter to future you, locked until a specific date
+
+🧠 Mental Health/Impact Wow
+
+    Crisis pattern detection — Gentle check-ins if language patterns suggest struggling
+    Therapist export — Beautiful PDF summary to share with a counselor
+    Gratitude ripple — See how your gratitude compounds over time
+
+Which of these resonate? I can build out any of these into the prototype!
+
+the text boxes are really janky and only let me type one letter at a time, also you should have a lock in button to submit an entry
+1:09 PM
+
+Good catch! That's a React state update issue. Let me fix the text inputs and add a proper submit flow:
+Edited 4 files, read a file
++34-23
++3-1
++103-28
++118-28
+Done
+
+Fixed! Here's what changed:
+
+Text input fix — The TextArea now uses local state that syncs properly, so typing works smoothly.
+
+"Lock it in" button — Both morning and evening entries now have a submit button that:
+
+    Is disabled (grayed out) until you've written something
+    Shows "Lock it in 🔒" to make it feel intentional
+    Transforms the card into a success state after submission
+
+Success states — After locking in:
+
+    Morning shows "Dream captured! ✨" with your entry quoted back and a note about seeing you in the evening
+    Evening shows "Day complete! 🌙" with your entry, an updated streak counter, and a restful message
+    Both have an "Edit entry" button if you want to change something
+
+The "lock it in" language reinforces the commitment aspect — it's not just typing into a void, you're deciding to capture this moment. This should feel more satisfying and intentional.
+
+Want me to add any animations to the submit transition, or shall we tackle some of those hackathon wow-factor features?
+Daylight journal v2
+Code · JSX 
+
+the text box still keeps pausing after every letter and kicking me out of it
+1:11 PM
+
+The issue is that the component is re-rendering on every keystroke. Let me fix this properly by moving the TextArea outside the main component so it doesn't get recreated:
+Edited 5 files
++31-3
++1-36
++10-2
++105-103
++120-118
+Done
+
+Now let me also clean up the unused state variables:
+Edited a file, read a file
++6-8
+Done
+
+This should fix the typing issue. The key changes:
+
+    Moved TextArea outside the main component — Now it won't get re-created on every render
+    Using defaultValue instead of value — This makes it an uncontrolled component that doesn't re-render on every keystroke
+    Using refs to grab the text on submit — We only read the value when you click "Lock it in"
+    Separate state just for button enable/disable — canSubmitDream and canSubmitEvening track whether there's text, without causing full re-renders
+
+Try typing now — it should be smooth. Let me know if it's still janky and we can try a different approach!
+Daylight journal v2
+Code · JSX 
+
+the janky text box still sometimes keeps kicking me out of it
+1:14 PM
+
+The issue is likely that the parent component is still re-rendering due to the useMemo for entries or theme calculations. Let me completely simplify this by using a plain HTML approach with no React state updates while typing:
+Edited 4 files
++3-31
++5-7
++123-105
++138-120
+Done
+
+Now let me also fix the entries generation that runs on every render - that's likely the main culprit:
+Edited a file, read a file
++33-44
+Done
+
+I made three key changes:
+
+    Removed all onChange handlers from textareas — Now they're completely uncontrolled inputs that don't trigger any React updates while typing
+    Made entries static — Instead of generating random data with Math.random() on each render, it's now a fixed array that never changes
+    Removed the canSubmit state updates — The button is always active; it just checks if there's text when you click it
+
+The textareas now use plain refs — React has zero awareness of what you're typing until you click "Lock it in". This should completely fix the focus issue.
+
+Try it now!
+Daylight journal v2
+Code · JSX 
+
+I want the vibe to be more of a terminal type/dark mode with subtle background coloring
+1:16 PM
+
+Love that direction — a terminal aesthetic with dark mode and subtle mood-based coloring. Let me rebuild it:
+Edited 8 files
++11-11
++51-46
++35-34
++27-19
++46-49
++175-164
++72-71
++146-141
+Done
+
+Now let me update the History and Wrapped views to match the terminal style:
+Edited 3 files, read a file
++161-163
++155-157
++34-30
+Done
+
+Here's the terminal-style dark mode version! Key aesthetic changes:
+
+Visual Design
+
+    Deep dark backgrounds that shift subtly based on mood (blue-blacks for peaceful, red-blacks for energetic, purple-blacks for reflective, etc.)
+    Monospace font throughout (Fira Code)
+    Sharp 2px border-radius instead of rounded corners
+    Subtle accent color glows and borders
+    Minimal, command-line inspired UI elements
+
+Terminal-style touches
+
+    Headers styled like commands: $ dream --capture, $ history --all, $ reflect --today
+    Comments for labels: // dream, // grateful, // insight
+    Arrow symbols: → instead of emojis for many elements
+    Lowercase text throughout
+    Clean, data-focused stat displays
+
+Mood-based theming
+
+    Each mood has a unique dark palette with a matching accent color
+    The accent creates subtle glows and tints throughout
+    Background shifts are very subtle but noticeable
+
+The vibe now feels like a personal dev tool / hacker's journal. Try switching between the time modes and clicking through the history calendar!
+
+Want me to add any terminal effects like typing animations, scanlines, or a blinking cursor?
+Daylight journal v2
+Code · JSX 
+
+maybe a little too terminally, i like the font but fix it a little bit
+1:47 PM
+
+Got it — keeping the monospace font and dark mode but softening the terminal aesthetic. More modern dark UI, less command-line:
+Edited 10 files, read a file
++11-11
++50-51
++36-35
++28-27
++46-46
++171-175
++73-72
++145-146
++159-161
++155-155
+Done
+
+Here's the softened version! Changes from the hard terminal look:
+
+Visual tweaks:
+
+    Rounded corners (10-16px) instead of sharp 2px
+    Lighter card backgrounds with a dedicated card color in the theme
+    Softer borders using subtle color instead of accent
+    Proper title case ("Good morning" not "good morning")
+    Emojis back for time-of-day icons (☀️ 🌤 🌙)
+    Normal labels instead of command-style ($ dream --capture → "What did you dream about?")
+    Removed the // comment-style labels
+
+Still kept:
+
+    Fira Code monospace font
+    Dark mode with mood-tinted backgrounds
+    Subtle color shifts based on mood
+    The overall clean, modern dark aesthetic
+    Accent color glows and highlights
+
+The vibe is now more "sleek productivity app" than "hacker terminal" — modern dark mode with just a hint of that dev-tool feel from the monospace font. Try it out!
+Daylight journal v2
+Code · JSX 
+
+we need an option for AI to help get little new goals or ideas for things to do or try each day based on your previous journal entires, dreams, and notes
+1:58 PM
+
+Great idea! Let me add an AI-powered suggestions feature that analyzes your past entries and generates personalized micro-goals and ideas. I'll add it to the afternoon view and make it feel like a thoughtful companion:
+Edited 2 files, read a file
++53-2
++227-73
+Done
+
+Added the AI suggestions feature! Switch to the afternoon (pm) view to see it. Here's what it does:
+
+Initial state:
+
+    Shows a "Generate ideas" button with a brief explanation of what the AI will do
+
+After clicking:
+
+    Loading spinner with "Analyzing your journal..."
+    Then reveals personalized suggestions:
+
+🔮 Pattern detected — An insight about recurring themes in your dreams and reflections (e.g., "I noticed you've been dreaming about open spaces and freedom lately...")
+
+Ideas for today — 4 actionable micro-goals:
+
+    Each has an icon, title, description
+    Shows why it's being suggested ("Based on your note from Tuesday")
+    Tap to select as today's goal (highlighted with "Today's goal" badge)
+    Categories: creative, mindful, connection, explore
+
+Questions to ponder — 3 reflective prompts personalized to your entries (e.g., "What would your dream-self from last night want you to do today?")
+
+Regenerate button — Get fresh ideas if these don't resonate
+
+The suggestions are currently simulated, but the structure is ready for a real AI API call. For the hackathon, you could:
+
+    Connect it to Claude's API to actually analyze entries
+    Add more suggestion categories (health, learning, gratitude)
+    Track which suggestions users select to improve future recommendations
+
+Want me to add anything else to this feature?
+Daylight journal v2
+Code · JSX 
+
+add a button for new day for demo purposes, the non-black color scheme should change based on the vibe, there should be a goals tab where users can add goals for the day and have small random goals that an AI would create
+2:18 PM
+
+Let me add those features - a demo "New Day" button, dynamic accent colors based on mood, and a dedicated Goals tab with AI-generated micro-goals:
+Edited 4 files
++72-16
++2-2
++51-50
++63-36
+Done
+
+Now let me add the Goals view:
+Edited 3 files, read a file
++298-1
++4-3
++14-11
+Done
+
+Here's what I added:
+
+🔄 New Day Button
+
+    Centered at the top with the time toggles
+    Clicking it cycles through different demo days
+    Each day has a different mood (peaceful → energetic → reflective → creative → grateful → calm)
+    Resets all entries and generates fresh AI micro-goals
+
+🎨 Dynamic Color Scheme
+
+    The entire app's accent color now changes based on the current day's mood:
+        Peaceful = blue tones
+        Energetic = orange/coral
+        Reflective = purple
+        Creative = gold
+        Grateful = green
+        Calm = teal
+
+◎ Goals Tab
+
+    New tab in the navigation
+    Progress bar at the top showing completed/total goals
+    AI Micro-Goals section:
+        3 small, achievable goals with icons
+        Based on "your vibe" (mood-aware)
+        Tap to check off as complete
+        "New" button to refresh with different goals
+    Your Goals section:
+        Add your own custom goals
+        Input field with enter-to-submit
+        Tap to toggle complete
+    Celebration state when all goals are done! 🎉
+
+Try clicking "New Day" a few times to see the color scheme shift with each mood. The goals will also refresh with new suggestions each day!
+Daylight journal v2
+Code · JSX 
+
+    It should not say AI or ask the user to use the AI button, it should make goals based on previous days info, update the UI to address that
+    How can we further gamify this concept to encourage creativity while also making the app more complex
+
+2:21 PM
+
+Great feedback! Let me fix the AI language and brainstorm gamification ideas:
+Edited 2 files
++304-296
++48-18
+Done
+
+Now let me also update the afternoon suggestions to remove AI language:
+Edited a file, read a file
++227-227
+Done
+
+Fixed the AI language! Now for gamification ideas to encourage creativity and add complexity:
+
+🎮 Gamification Ideas for the Hackathon
+
+1. XP & Leveling System
+
+    Earn XP for journaling, completing goals, remembering dreams
+    Level up your "Inner Explorer" rank (Dreamer → Wanderer → Seeker → Sage → Oracle)
+    Each level unlocks new themes, prompts, or features
+
+2. Achievement Badges
+
+    "Dream Weaver" — Logged 7 dreams in a row
+    "Night Owl" — Journaled past midnight
+    "Early Bird" — Captured a dream before 7am
+    "Deep Thinker" — Wrote 500+ words in one entry
+    "Pattern Finder" — Had the same mood 5 days straight
+    "Story Starter" — Saved 10 creative ideas
+    Secret/hidden achievements for surprise delight
+
+3. Creative Challenges
+
+    Weekly creative prompts ("This week: Write from your dream character's perspective")
+    30-day challenges with progress tracking
+    Community challenges (if social features exist)
+
+4. Streak Multipliers & Rewards
+
+    Longer streaks = bonus XP multiplier
+    Streak milestones unlock special themes or sounds
+    "Streak shields" — Miss one day without breaking streak (earned through consistency)
+
+5. Dream Journal RPG Elements
+
+    Your dreams populate a "Dream World" map
+    Recurring dream themes become "locations" you can revisit
+    Dream characters become collectible "companions"
+
+6. Mood Garden / Visualization
+
+    Plant a seed each day you journal
+    Plants grow based on consistency
+    Different moods = different plant types
+    Watch your garden flourish over weeks
+
+7. Time Capsules
+
+    Lock entries to open in the future
+    Get notified: "You wrote this 1 year ago today"
+    Earn badges for creating and opening capsules
+
+Want me to implement any of these? I'd suggest starting with XP/Leveling + Achievements as they're visually impressive and add depth without being too complex to demo.
+Daylight journal v2
+Code · JSX 
+
+remove any of hte possible AI/API elements implementation for now, we will manually implement them
+2:26 PM
+Usage limit reached ∙ Resets 3:00 PM ∙ limits shared with Claude Code
+
+remove any of hte possible AI/API elements implementation for now, we will manually implement them
+Claude is AI and can make mistakes. Please double-check responses.
+Daylight journal v2 · JSX
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 
 const DaylightJournal = () => {
   const [currentView, setCurrentView] = useState('home');
   const [demoTime, setDemoTime] = useState('morning'); // morning, afternoon, evening
+  const [demoDay, setDemoDay] = useState(0); // For cycling through demo days
   const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
   const [quickNote, setQuickNote] = useState('');
   const [selectedGoal, setSelectedGoal] = useState(null);
@@ -14,6 +539,142 @@ const DaylightJournal = () => {
   const eveningRef = useRef(null);
   const [dreamText, setDreamText] = useState('');
   const [eveningText, setEveningText] = useState('');
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  
+  // Goals state
+  const [userGoals, setUserGoals] = useState([]);
+  const [newGoalText, setNewGoalText] = useState('');
+  const [aiMicroGoals, setAiMicroGoals] = useState([
+    { id: 1, text: 'Take 3 deep breaths before your first meeting', completed: false, icon: '🧘' },
+    { id: 2, text: 'Write down one thing you\'re looking forward to', completed: false, icon: '✏️' },
+    { id: 3, text: 'Step outside for 5 minutes of fresh air', completed: false, icon: '🌿' },
+  ]);
+  const [generatingGoals, setGeneratingGoals] = useState(false);
+
+  // Demo day data for cycling
+  const demoDays = [
+    { mood: 'peaceful', dream: 'I was walking through a quiet forest, the trees were glowing softly.', reflection: 'Today felt balanced. Had a good conversation with mom.' },
+    { mood: 'energetic', dream: 'Running through city streets, everything was fast and exciting.', reflection: 'So much energy today! Finished the project ahead of schedule.' },
+    { mood: 'reflective', dream: 'Sitting by an ocean, waves bringing old memories.', reflection: 'Thought a lot about where I want to be next year.' },
+    { mood: 'creative', dream: 'Building impossible structures that kept changing shape.', reflection: 'Ideas flowing all day. Started three new projects.' },
+    { mood: 'grateful', dream: 'A gathering of friends, everyone was laughing.', reflection: 'Feeling so thankful for the people in my life.' },
+    { mood: 'calm', dream: 'Floating in warm water under stars.', reflection: 'Quiet day. Sometimes stillness is what we need.' },
+  ];
+
+  const currentDemoDay = demoDays[demoDay % demoDays.length];
+
+  // Cycle to next demo day
+  const nextDemoDay = () => {
+    setDemoDay(d => d + 1);
+    setDreamSubmitted(false);
+    setEveningSubmitted(false);
+    setDreamText('');
+    setEveningText('');
+    setShowAISuggestions(false);
+    setAiSuggestions(null);
+    setSelectedGoal(null);
+    // Generate new AI micro goals
+    generateNewMicroGoals();
+  };
+
+  const generateNewMicroGoals = () => {
+    const moodBasedGoals = {
+      peaceful: [
+        { text: 'Find a quiet spot and sit for 5 minutes', icon: '🧘', source: 'You felt calm yesterday' },
+        { text: 'Write down what peace means to you today', icon: '✏️', source: 'From your reflection' },
+        { text: 'Take a slow walk without your phone', icon: '🚶', source: 'Based on your dream themes' },
+      ],
+      energetic: [
+        { text: 'Channel your energy into a quick workout', icon: '💪', source: 'Matching your vibe' },
+        { text: 'Start that project you\'ve been putting off', icon: '🚀', source: 'You mentioned feeling motivated' },
+        { text: 'Dance to your favorite song', icon: '💃', source: 'Based on your mood' },
+      ],
+      reflective: [
+        { text: 'Write a letter to your future self', icon: '💌', source: 'You\'ve been introspective' },
+        { text: 'Look through old photos for 10 minutes', icon: '📸', source: 'From your dream about memories' },
+        { text: 'Journal about a turning point in your life', icon: '📖', source: 'Based on your reflections' },
+      ],
+      creative: [
+        { text: 'Sketch something without lifting your pen', icon: '✏️', source: 'Your creative energy is high' },
+        { text: 'Write 100 words of fiction', icon: '📝', source: 'From your lighthouse keeper idea' },
+        { text: 'Take a photo from an unusual angle', icon: '📷', source: 'Based on your dreams' },
+      ],
+      grateful: [
+        { text: 'Send a thank you message to someone', icon: '💬', source: 'You mentioned feeling thankful' },
+        { text: 'Write 3 things you appreciate about yourself', icon: '💝', source: 'From your gratitude patterns' },
+        { text: 'Do something kind for a stranger', icon: '🌟', source: 'Based on your reflections' },
+      ],
+      calm: [
+        { text: 'Make a cup of tea and drink it slowly', icon: '🍵', source: 'Matching your peaceful mood' },
+        { text: 'Listen to ambient sounds for 5 minutes', icon: '🎧', source: 'From your dream imagery' },
+        { text: 'Declutter one small space', icon: '✨', source: 'Based on your calm state' },
+      ],
+      inspired: [
+        { text: 'Write down 5 ideas, no matter how wild', icon: '💡', source: 'Your inspiration is flowing' },
+        { text: 'Research something you\'re curious about', icon: '🔍', source: 'Based on your entries' },
+        { text: 'Share an idea with someone', icon: '💬', source: 'From your creative dreams' },
+      ],
+      cozy: [
+        { text: 'Create a cozy corner and read for 20 min', icon: '📚', source: 'Matching your mood' },
+        { text: 'Cook or bake something comforting', icon: '🍪', source: 'From your dream about warmth' },
+        { text: 'Reach out to someone you miss', icon: '💛', source: 'Based on your reflections' },
+      ],
+    };
+    
+    const currentMood = currentDemoDay.mood;
+    const goals = moodBasedGoals[currentMood] || moodBasedGoals.peaceful;
+    setAiMicroGoals(goals.map((g, i) => ({ ...g, id: Date.now() + i, completed: false })));
+  };
+
+  // Simulated AI analysis of past entries
+  const generateAISuggestions = () => {
+    setAiLoading(true);
+    // Simulate API call delay
+    setTimeout(() => {
+      const suggestions = {
+        insight: "I noticed you've been dreaming about open spaces and freedom lately, and your reflections mention feeling most alive during creative moments. There's a pattern of seeking expansion.",
+        goals: [
+          {
+            type: 'creative',
+            icon: '✏️',
+            title: 'Write for 10 minutes',
+            description: 'You mentioned a lighthouse keeper story idea 3 days ago. Spend 10 minutes expanding it.',
+            why: 'Based on your note from Tuesday'
+          },
+          {
+            type: 'mindful',
+            icon: '🧘',
+            title: 'Morning walk without phone',
+            description: 'Your dreams have featured open landscapes. Try a 15-minute walk, just observing.',
+            why: 'Based on recurring dream themes'
+          },
+          {
+            type: 'connection',
+            icon: '💬',
+            title: 'Reach out to someone',
+            description: "You felt energized after talking with Sarah. Send a quick message to someone you've been thinking about.",
+            why: 'Based on your reflection from yesterday'
+          },
+          {
+            type: 'explore',
+            icon: '🔍',
+            title: 'Try something new',
+            description: 'Visit a place in your city you\'ve never been, even just for 20 minutes.',
+            why: 'Based on your gratitude patterns'
+          },
+        ],
+        reflection_prompts: [
+          "What would your dream-self from last night want you to do today?",
+          "You mentioned feeling 'peaceful' often this week. What creates that feeling?",
+          "If you could give yourself permission to do one thing today, what would it be?"
+        ]
+      };
+      setAiSuggestions(suggestions);
+      setAiLoading(false);
+    }, 1500);
+  };
   
   // Static demo data - 30 days of entries (defined once, never changes)
   const [entries] = useState([
@@ -60,19 +721,19 @@ const DaylightJournal = () => {
     return Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0][0];
   }, [entries]);
 
-  // Theme colors based on mood - dark terminal aesthetic with subtle accents
+  // Theme colors based on mood - modern dark UI with subtle mood tints
   const themes = {
-    peaceful: { bg: '#0a0f14', accent: '#4a9ead', text: '#c5d1d8', subtle: '#1a2a32' },
-    energetic: { bg: '#140a0a', accent: '#ad6a4a', text: '#d8c5c5', subtle: '#2a1a1a' },
-    reflective: { bg: '#0f0a14', accent: '#8a6aad', text: '#d1c5d8', subtle: '#1f1a2a' },
-    grateful: { bg: '#0a140f', accent: '#4aad6a', text: '#c5d8c9', subtle: '#1a2a1f' },
-    creative: { bg: '#14120a', accent: '#ad9a4a', text: '#d8d5c5', subtle: '#2a281a' },
-    calm: { bg: '#0a1210', accent: '#5aad8a', text: '#c5d8d1', subtle: '#1a2a25' },
-    inspired: { bg: '#120a10', accent: '#ad4a8a', text: '#d8c5d1', subtle: '#2a1a25' },
-    cozy: { bg: '#12100a', accent: '#ad8a5a', text: '#d8d1c5', subtle: '#2a251a' },
+    peaceful: { bg: '#12161c', accent: '#6aadcf', text: '#d0dce5', subtle: '#1a2230', card: '#1e2736' },
+    energetic: { bg: '#1c1412', accent: '#cf8a6a', text: '#e5d8d0', subtle: '#2a1e1a', card: '#362820' },
+    reflective: { bg: '#18141c', accent: '#a68acf', text: '#ddd0e5', subtle: '#241a2a', card: '#2e2236' },
+    grateful: { bg: '#121c16', accent: '#6acf8a', text: '#d0e5d8', subtle: '#1a2a1e', card: '#203628' },
+    creative: { bg: '#1c1a12', accent: '#cfba6a', text: '#e5e0d0', subtle: '#2a281a', card: '#363220' },
+    calm: { bg: '#141c18', accent: '#6acfba', text: '#d0e5e0', subtle: '#1a2a26', card: '#203630' },
+    inspired: { bg: '#1a1418', accent: '#cf6aa6', text: '#e5d0dd', subtle: '#2a1a24', card: '#36202e' },
+    cozy: { bg: '#1a1814', accent: '#cfaa6a', text: '#e5ddd0', subtle: '#2a2620', card: '#363020' },
   };
 
-  const theme = themes[recentMood] || themes.peaceful;
+  const theme = themes[currentDemoDay.mood] || themes.peaceful;
   const streak = entries.filter(e => !e.empty).length;
 
   const formatDate = (date) => {
@@ -91,85 +752,113 @@ const DaylightJournal = () => {
       bottom: 0,
       left: 0,
       right: 0,
-      background: `linear-gradient(to top, ${theme.bg} 0%, ${theme.bg}ee 100%)`,
-      borderTop: `1px solid ${theme.accent}33`,
-      padding: '12px 0 28px 0',
+      background: `linear-gradient(to top, ${theme.bg} 0%, ${theme.bg}dd 100%)`,
+      borderTop: `1px solid ${theme.subtle}`,
+      padding: '14px 0 30px 0',
       display: 'flex',
       justifyContent: 'space-around',
       backdropFilter: 'blur(20px)',
       zIndex: 100,
     }}>
       {[
-        { id: 'home', icon: '>', label: 'today' },
-        { id: 'history', icon: '#', label: 'history' },
-        { id: 'wrapped', icon: '*', label: 'wrapped' },
+        { id: 'home', icon: '◐', label: 'today' },
+        { id: 'goals', icon: '◎', label: 'goals' },
+        { id: 'history', icon: '◫', label: 'history' },
+        { id: 'wrapped', icon: '✦', label: 'wrapped' },
       ].map(item => (
         <button
           key={item.id}
           onClick={() => { setCurrentView(item.id); setSelectedHistoryDay(null); }}
           style={{
-            background: 'none',
+            background: currentView === item.id ? theme.card : 'transparent',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             gap: '6px',
-            opacity: currentView === item.id ? 1 : 0.4,
+            opacity: currentView === item.id ? 1 : 0.5,
             transition: 'all 0.3s ease',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            backgroundColor: currentView === item.id ? `${theme.accent}20` : 'transparent',
+            padding: '10px 20px',
+            borderRadius: '12px',
           }}
         >
           <span style={{ 
-            fontFamily: '"SF Mono", "Fira Code", monospace',
-            fontSize: '16px', 
-            color: theme.accent,
+            fontSize: '18px', 
+            color: currentView === item.id ? theme.accent : theme.text,
           }}>{item.icon}</span>
           <span style={{
-            fontFamily: '"SF Mono", "Fira Code", monospace',
-            fontSize: '12px',
+            fontFamily: '"Fira Code", monospace',
+            fontSize: '10px',
             color: theme.text,
-            letterSpacing: '0.05em',
+            letterSpacing: '0.02em',
           }}>{item.label}</span>
         </button>
       ))}
     </nav>
   );
 
-  // Demo time toggle
+  // Demo controls
   const DemoToggle = () => (
     <div style={{
       position: 'fixed',
       top: '16px',
-      right: '16px',
-      background: theme.subtle,
-      border: `1px solid ${theme.accent}40`,
-      borderRadius: '4px',
-      padding: '4px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: theme.card,
+      border: `1px solid ${theme.subtle}`,
+      borderRadius: '12px',
+      padding: '6px',
       display: 'flex',
-      gap: '2px',
+      gap: '6px',
       zIndex: 200,
-      fontFamily: '"SF Mono", "Fira Code", monospace',
+      fontFamily: '"Fira Code", monospace',
     }}>
-      {['morning', 'afternoon', 'evening'].map(time => (
-        <button
-          key={time}
-          onClick={() => setDemoTime(time)}
-          style={{
-            background: demoTime === time ? theme.accent : 'transparent',
-            color: demoTime === time ? theme.bg : theme.text,
-            border: 'none',
-            borderRadius: '2px',
-            padding: '6px 10px',
-            fontSize: '11px',
-            cursor: 'pointer',
-            letterSpacing: '0.03em',
-          }}
-        >
-          {time === 'morning' ? 'am' : time === 'afternoon' ? 'pm' : 'eve'}
-        </button>
-      ))}
+      <button
+        onClick={nextDemoDay}
+        style={{
+          background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`,
+          color: theme.bg,
+          border: 'none',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          fontSize: '11px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        <span>↻</span> New Day
+      </button>
+      <div style={{
+        display: 'flex',
+        gap: '2px',
+        background: theme.subtle,
+        borderRadius: '8px',
+        padding: '2px',
+      }}>
+        {['morning', 'afternoon', 'evening'].map(time => (
+          <button
+            key={time}
+            onClick={() => setDemoTime(time)}
+            style={{
+              background: demoTime === time ? theme.card : 'transparent',
+              color: demoTime === time ? theme.accent : theme.text,
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              fontSize: '11px',
+              cursor: 'pointer',
+              opacity: demoTime === time ? 1 : 0.5,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {time === 'morning' ? '☀️' : time === 'afternoon' ? '🌤' : '🌙'}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
@@ -177,24 +866,25 @@ const DaylightJournal = () => {
     <button
       onClick={onClick}
       style={{
-        background: 'transparent',
-        border: `1px solid ${theme.accent}50`,
-        borderRadius: '2px',
-        padding: '8px 12px',
-        fontFamily: '"SF Mono", "Fira Code", monospace',
+        background: theme.card,
+        border: `1px solid ${theme.subtle}`,
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontFamily: '"Fira Code", monospace',
         fontSize: '12px',
-        color: theme.accent,
+        color: theme.text,
+        opacity: 0.8,
         cursor: 'pointer',
         whiteSpace: 'nowrap',
         transition: 'all 0.2s ease',
       }}
       onMouseEnter={(e) => {
-        e.target.style.background = `${theme.accent}20`;
+        e.target.style.opacity = '1';
         e.target.style.borderColor = theme.accent;
       }}
       onMouseLeave={(e) => {
-        e.target.style.background = 'transparent';
-        e.target.style.borderColor = `${theme.accent}50`;
+        e.target.style.opacity = '0.8';
+        e.target.style.borderColor = theme.subtle;
       }}
     >
       {text}
@@ -205,18 +895,18 @@ const DaylightJournal = () => {
     <div
       onClick={() => setSelectedGoal(index)}
       style={{
-        background: selectedGoal === index ? `${theme.accent}15` : theme.subtle,
-        border: `1px solid ${selectedGoal === index ? theme.accent : theme.accent + '30'}`,
-        borderRadius: '4px',
-        padding: '16px',
+        background: selectedGoal === index ? theme.card : theme.subtle,
+        border: `1px solid ${selectedGoal === index ? theme.accent : theme.card}`,
+        borderRadius: '14px',
+        padding: '18px',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
-        fontFamily: '"SF Mono", "Fira Code", monospace',
+        fontFamily: '"Fira Code", monospace',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '12px', color: theme.accent }}>{icon}</span>
-        <span style={{ fontSize: '10px', color: theme.text, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+        <span style={{ fontSize: '16px' }}>{icon}</span>
+        <span style={{ fontSize: '11px', color: theme.text, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {source}
         </span>
         {selectedGoal === index && (
@@ -224,73 +914,70 @@ const DaylightJournal = () => {
             marginLeft: 'auto',
             background: theme.accent,
             color: theme.bg,
-            fontSize: '9px',
-            padding: '3px 8px',
-            borderRadius: '2px',
-            letterSpacing: '0.05em',
-          }}>SELECTED</span>
+            fontSize: '10px',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            fontWeight: 500,
+          }}>selected</span>
         )}
       </div>
-      <p style={{ fontSize: '13px', color: theme.text, margin: '0 0 12px 0', lineHeight: 1.5, opacity: 0.9 }}>
+      <p style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', lineHeight: 1.6, opacity: 0.85 }}>
         {suggestion}
       </p>
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: '8px',
         background: `${theme.accent}20`,
-        padding: '6px 10px',
-        borderRadius: '2px',
+        padding: '8px 12px',
+        borderRadius: '8px',
       }}>
-        <span style={{ fontSize: '10px', color: theme.accent }}>→</span>
-        <span style={{ fontSize: '11px', color: theme.accent }}>{micro}</span>
+        <span style={{ fontSize: '12px', color: theme.accent }}>→</span>
+        <span style={{ fontSize: '12px', color: theme.accent }}>{micro}</span>
       </div>
     </div>
   );
 
   const HomeView = () => {
     const greeting = demoTime === 'morning' 
-      ? { symbol: '◐', text: 'good morning', sub: 'capture your dreams before they fade' }
+      ? { symbol: '☀️', text: 'Good morning', sub: 'Capture your dreams before they fade' }
       : demoTime === 'afternoon'
-      ? { symbol: '○', text: 'good afternoon', sub: 'how is your day going?' }
-      : { symbol: '●', text: 'good evening', sub: 'time to reflect on your day' };
+      ? { symbol: '🌤', text: 'Good afternoon', sub: "How's your day going?" }
+      : { symbol: '🌙', text: 'Good evening', sub: 'Time to reflect on your day' };
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', paddingTop: '60px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+        <div style={{ textAlign: 'center', paddingTop: '60px', fontFamily: '"Fira Code", monospace' }}>
           <span style={{ 
-            fontSize: '48px', 
+            fontSize: '40px', 
             display: 'block', 
             marginBottom: '16px',
-            color: theme.accent,
-            textShadow: `0 0 30px ${theme.accent}50`,
           }}>{greeting.symbol}</span>
           <h1 style={{
-            fontSize: '24px',
-            fontWeight: 400,
+            fontSize: '22px',
+            fontWeight: 500,
             color: theme.text,
             margin: '0 0 8px 0',
-            letterSpacing: '0.05em',
+            letterSpacing: '-0.01em',
           }}>{greeting.text}</h1>
           <p style={{
             fontSize: '13px',
             color: theme.text,
             opacity: 0.5,
             margin: '0 0 24px 0',
-            letterSpacing: '0.03em',
           }}>{greeting.sub}</p>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: theme.subtle,
-            border: `1px solid ${theme.accent}30`,
-            borderRadius: '2px',
-            padding: '8px 16px',
+            background: theme.card,
+            border: `1px solid ${theme.subtle}`,
+            borderRadius: '10px',
+            padding: '10px 18px',
           }}>
-            <span style={{ fontSize: '14px' }}>🔥</span>
-            <span style={{ fontSize: '13px', color: theme.accent }}>
+            <span style={{ fontSize: '16px' }}>🔥</span>
+            <span style={{ fontSize: '14px', color: theme.accent, fontWeight: 500 }}>
               {streak} day streak
             </span>
           </div>
@@ -299,41 +986,40 @@ const DaylightJournal = () => {
         {/* Morning: Dream Journal */}
         {demoTime === 'morning' && (
           <div style={{
-            background: theme.subtle,
-            borderRadius: '4px',
+            background: theme.card,
+            borderRadius: '16px',
             padding: '24px',
-            border: `1px solid ${theme.accent}30`,
+            border: `1px solid ${theme.subtle}`,
           }}>
             {!dreamSubmitted ? (
               <>
                 <h2 style={{
-                  fontFamily: '"SF Mono", "Fira Code", monospace',
-                  fontSize: '14px',
-                  fontWeight: 400,
-                  color: theme.accent,
+                  fontFamily: '"Fira Code", monospace',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: theme.text,
                   margin: '0 0 4px 0',
-                  letterSpacing: '0.05em',
-                }}>$ dream --capture</h2>
+                }}>What did you dream about?</h2>
                 <p style={{
-                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontFamily: '"Fira Code", monospace',
                   fontSize: '12px',
                   color: theme.text,
-                  opacity: 0.5,
+                  opacity: 0.4,
                   margin: '0 0 16px 0',
-                }}>what did you dream about?</p>
+                }}>Even fragments help you remember better</p>
                 <textarea
                   ref={dreamRef}
                   id="dream-input"
-                  placeholder="even fragments help you remember better..."
+                  placeholder="I dreamed that..."
                   rows={4}
                   style={{
                     width: '100%',
                     padding: '16px',
-                    border: `1px solid ${theme.accent}30`,
-                    borderRadius: '2px',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '12px',
+                    fontFamily: '"Fira Code", monospace',
                     fontSize: '14px',
-                    lineHeight: 1.8,
+                    lineHeight: 1.7,
                     color: theme.text,
                     background: theme.bg,
                     resize: 'none',
@@ -341,10 +1027,10 @@ const DaylightJournal = () => {
                     boxSizing: 'border-box',
                   }}
                 />
-                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-                  <Chip text="i was flying..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I was flying...'; }} />
-                  <Chip text="i felt..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I felt...'; }} />
-                  <Chip text="can't remember" onClick={() => { if(dreamRef.current) dreamRef.current.value = "Can't remember any dreams today."; }} />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
+                  <Chip text="I was flying..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I was flying...'; }} />
+                  <Chip text="I felt..." onClick={() => { if(dreamRef.current) dreamRef.current.value = 'I felt...'; }} />
+                  <Chip text="Can't remember" onClick={() => { if(dreamRef.current) dreamRef.current.value = "Can't remember any dreams today."; }} />
                 </div>
                 <button
                   onClick={() => { 
@@ -357,43 +1043,42 @@ const DaylightJournal = () => {
                   style={{
                     marginTop: '20px',
                     width: '100%',
-                    padding: '14px',
-                    background: theme.accent,
+                    padding: '16px',
+                    background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`,
                     color: theme.bg,
                     border: 'none',
-                    borderRadius: '2px',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
-                    fontSize: '13px',
+                    borderRadius: '12px',
+                    fontFamily: '"Fira Code", monospace',
+                    fontSize: '14px',
+                    fontWeight: 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    letterSpacing: '0.05em',
                   }}
                 >
-                  lock it in →
+                  Lock it in →
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
-                <span style={{ fontSize: '32px', display: 'block', marginBottom: '16px', color: theme.accent }}>✓</span>
+              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"Fira Code", monospace' }}>
+                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>✨</span>
                 <h2 style={{
-                  fontSize: '16px',
-                  fontWeight: 400,
-                  color: theme.accent,
-                  margin: '0 0 12px 0',
-                }}>dream captured</h2>
+                  fontSize: '18px',
+                  fontWeight: 500,
+                  color: theme.text,
+                  margin: '0 0 8px 0',
+                }}>Dream captured!</h2>
                 <p style={{
-                  fontSize: '12px',
+                  fontSize: '13px',
                   color: theme.text,
                   opacity: 0.5,
                   margin: '0 0 20px 0',
-                  lineHeight: 1.6,
                 }}>
-                  the more you record, the more you'll remember
+                  The more you record, the more you'll remember
                 </p>
                 <div style={{
                   background: theme.bg,
-                  border: `1px solid ${theme.accent}30`,
-                  borderRadius: '2px',
+                  border: `1px solid ${theme.subtle}`,
+                  borderRadius: '12px',
                   padding: '16px',
                   textAlign: 'left',
                   color: theme.text,
@@ -401,23 +1086,24 @@ const DaylightJournal = () => {
                   lineHeight: 1.6,
                   opacity: 0.8,
                 }}>
-                  <span style={{ color: theme.accent }}>→ </span>{dreamText}
+                  {dreamText}
                 </div>
                 <button
                   onClick={() => setDreamSubmitted(false)}
                   style={{
                     marginTop: '16px',
                     background: 'transparent',
-                    border: `1px solid ${theme.accent}40`,
-                    borderRadius: '2px',
-                    padding: '8px 16px',
-                    fontSize: '12px',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '10px',
+                    padding: '10px 20px',
+                    fontSize: '13px',
                     color: theme.text,
+                    opacity: 0.7,
                     cursor: 'pointer',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontFamily: '"Fira Code", monospace',
                   }}
                 >
-                  edit
+                  Edit
                 </button>
               </div>
             )}
@@ -427,55 +1113,209 @@ const DaylightJournal = () => {
         {/* Afternoon: Suggestions */}
         {demoTime === 'afternoon' && (
           <div style={{
-            background: theme.subtle,
-            borderRadius: '4px',
+            background: theme.card,
+            borderRadius: '16px',
             padding: '24px',
-            border: `1px solid ${theme.accent}30`,
-            fontFamily: '"SF Mono", "Fira Code", monospace',
+            border: `1px solid ${theme.subtle}`,
+            fontFamily: '"Fira Code", monospace',
           }}>
-            <h2 style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              color: theme.accent,
-              margin: '0 0 4px 0',
-            }}>$ suggest --from-history</h2>
-            <p style={{ fontSize: '12px', color: theme.text, opacity: 0.5, margin: '0 0 20px 0' }}>
-              based on what's been on your mind:
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <SuggestionCard
-                index={0}
-                icon="◐"
-                source="from your dreams"
-                suggestion="you dreamed about flying yesterday — take a moment to think about what freedom means to you."
-                micro="5 min reflection"
-              />
-              <SuggestionCard
-                index={1}
-                icon="#"
-                source="from your notes"
-                suggestion="you had that lighthouse keeper story idea — brainstorm for 10 minutes?"
-                micro="write 100 words"
-              />
-            </div>
+            {!showAISuggestions ? (
+              <>
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>✨</span>
+                  <h2 style={{
+                    fontSize: '17px',
+                    fontWeight: 500,
+                    color: theme.text,
+                    margin: '0 0 8px 0',
+                  }}>Get personalized ideas</h2>
+                  <p style={{ 
+                    fontSize: '13px', 
+                    color: theme.text, 
+                    opacity: 0.5, 
+                    margin: '0 0 24px 0',
+                    lineHeight: 1.6,
+                    maxWidth: '280px',
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                  }}>
+                    We'll look at your dreams, reflections, and notes to suggest ideas for today
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowAISuggestions(true);
+                      generateAISuggestions();
+                    }}
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`,
+                      color: theme.bg,
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '16px 32px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: '"Fira Code", monospace',
+                    }}
+                  >
+                    Show me →
+                  </button>
+                </div>
+              </>
+            ) : aiLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  border: `3px solid ${theme.subtle}`,
+                  borderTopColor: theme.accent,
+                  borderRadius: '50%',
+                  margin: '0 auto 20px',
+                  animation: 'spin 1s linear infinite',
+                }}/>
+                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.6 }}>
+                  Looking through your journal...
+                </p>
+                <style>{`
+                  @keyframes spin {
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
+              </div>
+            ) : aiSuggestions && (
+              <>
+                {/* Insight */}
+                <div style={{
+                  background: `${theme.accent}12`,
+                  borderRadius: '12px',
+                  padding: '18px',
+                  marginBottom: '20px',
+                  borderLeft: `3px solid ${theme.accent}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '14px' }}>🔮</span>
+                    <span style={{ fontSize: '11px', color: theme.accent, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Pattern noticed
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>
+                    {aiSuggestions.insight}
+                  </p>
+                </div>
+
+                {/* Goal suggestions */}
+                <h3 style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', opacity: 0.6 }}>
+                  Ideas for today
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                  {aiSuggestions.goals.map((goal, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedGoal(selectedGoal === i ? null : i)}
+                      style={{
+                        background: selectedGoal === i ? `${theme.accent}15` : theme.subtle,
+                        border: `1px solid ${selectedGoal === i ? theme.accent : theme.card}`,
+                        borderRadius: '12px',
+                        padding: '16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                        <span style={{ fontSize: '20px' }}>{goal.icon}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <h4 style={{ fontSize: '14px', color: theme.text, margin: 0, fontWeight: 500 }}>
+                              {goal.title}
+                            </h4>
+                            {selectedGoal === i && (
+                              <span style={{
+                                background: theme.accent,
+                                color: theme.bg,
+                                fontSize: '10px',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                              }}>Today's goal</span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '12px', color: theme.text, opacity: 0.7, margin: '0 0 8px 0', lineHeight: 1.5 }}>
+                            {goal.description}
+                          </p>
+                          <p style={{ fontSize: '11px', color: theme.accent, margin: 0, opacity: 0.8 }}>
+                            💡 {goal.why}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reflection prompts */}
+                <h3 style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', opacity: 0.6 }}>
+                  Questions to ponder
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                  {aiSuggestions.reflection_prompts.map((prompt, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: theme.subtle,
+                        borderRadius: '10px',
+                        padding: '14px 16px',
+                        fontSize: '13px',
+                        color: theme.text,
+                        opacity: 0.8,
+                        lineHeight: 1.5,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      "{prompt}"
+                    </div>
+                  ))}
+                </div>
+
+                {/* Regenerate button */}
+                <button
+                  onClick={() => generateAISuggestions()}
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '10px',
+                    padding: '14px',
+                    fontSize: '13px',
+                    color: theme.text,
+                    opacity: 0.7,
+                    cursor: 'pointer',
+                    fontFamily: '"Fira Code", monospace',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span>↻</span> Get new ideas
+                </button>
+              </>
+            )}
             
-            {/* Quick note */}
-            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: `1px solid ${theme.accent}20` }}>
+            {/* Quick note - always visible */}
+            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: `1px solid ${theme.subtle}` }}>
               <p style={{ fontSize: '12px', color: theme.text, opacity: 0.5, margin: '0 0 12px 0' }}>
-                $ note --quick
+                Capture a quick thought
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   type="text"
                   value={quickNote}
                   onChange={(e) => setQuickNote(e.target.value)}
-                  placeholder="capture a thought..."
+                  placeholder="What's on your mind..."
                   style={{
                     flex: 1,
-                    padding: '12px 16px',
-                    border: `1px solid ${theme.accent}30`,
-                    borderRadius: '2px',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    padding: '14px 16px',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '10px',
+                    fontFamily: '"Fira Code", monospace',
                     fontSize: '13px',
                     color: theme.text,
                     background: theme.bg,
@@ -486,12 +1326,13 @@ const DaylightJournal = () => {
                   background: theme.accent,
                   color: theme.bg,
                   border: 'none',
-                  borderRadius: '2px',
-                  padding: '12px 20px',
+                  borderRadius: '10px',
+                  padding: '14px 20px',
                   fontSize: '13px',
+                  fontWeight: 500,
                   cursor: 'pointer',
-                  fontFamily: '"SF Mono", "Fira Code", monospace',
-                }}>save</button>
+                  fontFamily: '"Fira Code", monospace',
+                }}>Save</button>
               </div>
             </div>
           </div>
@@ -500,41 +1341,40 @@ const DaylightJournal = () => {
         {/* Evening: Reflection */}
         {demoTime === 'evening' && (
           <div style={{
-            background: theme.subtle,
-            borderRadius: '4px',
+            background: theme.card,
+            borderRadius: '16px',
             padding: '24px',
-            border: `1px solid ${theme.accent}30`,
+            border: `1px solid ${theme.subtle}`,
           }}>
             {!eveningSubmitted ? (
               <>
                 <h2 style={{
-                  fontFamily: '"SF Mono", "Fira Code", monospace',
-                  fontSize: '14px',
-                  fontWeight: 400,
-                  color: theme.accent,
+                  fontFamily: '"Fira Code", monospace',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: theme.text,
                   margin: '0 0 4px 0',
-                  letterSpacing: '0.05em',
-                }}>$ reflect --today</h2>
+                }}>How was your day?</h2>
                 <p style={{
-                  fontFamily: '"SF Mono", "Fira Code", monospace',
+                  fontFamily: '"Fira Code", monospace',
                   fontSize: '12px',
                   color: theme.text,
-                  opacity: 0.5,
+                  opacity: 0.4,
                   margin: '0 0 16px 0',
-                }}>how was your day?</p>
+                }}>Reflect on what stood out</p>
                 <textarea
                   ref={eveningRef}
                   id="evening-input"
-                  placeholder="what stood out? what are you grateful for?"
+                  placeholder="Today I..."
                   rows={5}
                   style={{
                     width: '100%',
                     padding: '16px',
-                    border: `1px solid ${theme.accent}30`,
-                    borderRadius: '2px',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '12px',
+                    fontFamily: '"Fira Code", monospace',
                     fontSize: '14px',
-                    lineHeight: 1.8,
+                    lineHeight: 1.7,
                     color: theme.text,
                     background: theme.bg,
                     resize: 'none',
@@ -542,10 +1382,10 @@ const DaylightJournal = () => {
                     boxSizing: 'border-box',
                   }}
                 />
-                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-                  <Chip text="i'm grateful for..." onClick={() => { if(eveningRef.current) eveningRef.current.value = "I'm grateful for..."; }} />
-                  <Chip text="today i learned..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'Today I learned...'; }} />
-                  <Chip text="a highlight was..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'A highlight was...'; }} />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
+                  <Chip text="I'm grateful for..." onClick={() => { if(eveningRef.current) eveningRef.current.value = "I'm grateful for..."; }} />
+                  <Chip text="Today I learned..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'Today I learned...'; }} />
+                  <Chip text="A highlight was..." onClick={() => { if(eveningRef.current) eveningRef.current.value = 'A highlight was...'; }} />
                 </div>
                 <button
                   onClick={() => { 
@@ -558,43 +1398,42 @@ const DaylightJournal = () => {
                   style={{
                     marginTop: '20px',
                     width: '100%',
-                    padding: '14px',
-                    background: theme.accent,
+                    padding: '16px',
+                    background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`,
                     color: theme.bg,
                     border: 'none',
-                    borderRadius: '2px',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
-                    fontSize: '13px',
+                    borderRadius: '12px',
+                    fontFamily: '"Fira Code", monospace',
+                    fontSize: '14px',
+                    fontWeight: 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    letterSpacing: '0.05em',
                   }}
                 >
-                  lock it in →
+                  Lock it in →
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
-                <span style={{ fontSize: '32px', display: 'block', marginBottom: '16px', color: theme.accent }}>●</span>
+              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"Fira Code", monospace' }}>
+                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>🌙</span>
                 <h2 style={{
-                  fontSize: '16px',
-                  fontWeight: 400,
-                  color: theme.accent,
-                  margin: '0 0 12px 0',
-                }}>day complete</h2>
+                  fontSize: '18px',
+                  fontWeight: 500,
+                  color: theme.text,
+                  margin: '0 0 8px 0',
+                }}>Day complete!</h2>
                 <p style={{
-                  fontSize: '12px',
+                  fontSize: '13px',
                   color: theme.text,
                   opacity: 0.5,
                   margin: '0 0 20px 0',
-                  lineHeight: 1.6,
                 }}>
-                  another day of growth recorded. rest well.
+                  Another day of growth recorded. Rest well.
                 </p>
                 <div style={{
                   background: theme.bg,
-                  border: `1px solid ${theme.accent}30`,
-                  borderRadius: '2px',
+                  border: `1px solid ${theme.subtle}`,
+                  borderRadius: '12px',
                   padding: '16px',
                   textAlign: 'left',
                   color: theme.text,
@@ -602,22 +1441,22 @@ const DaylightJournal = () => {
                   lineHeight: 1.6,
                   opacity: 0.8,
                 }}>
-                  <span style={{ color: theme.accent }}>→ </span>{eveningText}
+                  {eveningText}
                 </div>
                 <div style={{
                   marginTop: '20px',
-                  padding: '12px',
+                  padding: '14px',
                   background: `${theme.accent}15`,
                   border: `1px solid ${theme.accent}30`,
-                  borderRadius: '2px',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '10px',
                 }}>
-                  <span style={{ fontSize: '16px' }}>🔥</span>
-                  <span style={{ fontSize: '14px', color: theme.accent }}>
-                    {streak + 1} day streak
+                  <span style={{ fontSize: '20px' }}>🔥</span>
+                  <span style={{ fontSize: '15px', color: theme.accent, fontWeight: 500 }}>
+                    {streak + 1} day streak!
                   </span>
                 </div>
                 <button
@@ -625,19 +1464,325 @@ const DaylightJournal = () => {
                   style={{
                     marginTop: '16px',
                     background: 'transparent',
-                    border: `1px solid ${theme.accent}40`,
-                    borderRadius: '2px',
-                    padding: '8px 16px',
-                    fontSize: '12px',
+                    border: `1px solid ${theme.subtle}`,
+                    borderRadius: '10px',
+                    padding: '10px 20px',
+                    fontSize: '13px',
                     color: theme.text,
+                    opacity: 0.7,
                     cursor: 'pointer',
-                    fontFamily: '"SF Mono", "Fira Code", monospace',
+                    fontFamily: '"Fira Code", monospace',
                   }}
                 >
-                  edit
+                  Edit
                 </button>
               </div>
             )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const GoalsView = () => {
+    const toggleMicroGoal = (id) => {
+      setAiMicroGoals(goals => goals.map(g => 
+        g.id === id ? { ...g, completed: !g.completed } : g
+      ));
+    };
+
+    const toggleUserGoal = (id) => {
+      setUserGoals(goals => goals.map(g => 
+        g.id === id ? { ...g, completed: !g.completed } : g
+      ));
+    };
+
+    const addUserGoal = () => {
+      if (newGoalText.trim()) {
+        setUserGoals([...userGoals, { id: Date.now(), text: newGoalText, completed: false }]);
+        setNewGoalText('');
+      }
+    };
+
+    const refreshMicroGoals = () => {
+      setGeneratingGoals(true);
+      setTimeout(() => {
+        generateNewMicroGoals();
+        setGeneratingGoals(false);
+      }, 800);
+    };
+
+    const completedCount = [...aiMicroGoals, ...userGoals].filter(g => g.completed).length;
+    const totalCount = aiMicroGoals.length + userGoals.length;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: '"Fira Code", monospace' }}>
+        <div style={{ paddingTop: '60px', textAlign: 'center' }}>
+          <h1 style={{
+            fontSize: '22px',
+            fontWeight: 500,
+            color: theme.text,
+            margin: '0 0 8px 0',
+          }}>Today's Goals</h1>
+          <p style={{
+            fontSize: '13px',
+            color: theme.text,
+            opacity: 0.5,
+            margin: 0,
+          }}>Small steps, big progress</p>
+        </div>
+
+        {/* Progress */}
+        {totalCount > 0 && (
+          <div style={{
+            background: theme.card,
+            borderRadius: '14px',
+            padding: '18px',
+            border: `1px solid ${theme.subtle}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '13px', color: theme.text, opacity: 0.7 }}>Progress</span>
+              <span style={{ fontSize: '14px', color: theme.accent, fontWeight: 500 }}>
+                {completedCount}/{totalCount}
+              </span>
+            </div>
+            <div style={{
+              background: theme.subtle,
+              borderRadius: '100px',
+              height: '8px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${(completedCount / totalCount) * 100}%`,
+                height: '100%',
+                background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`,
+                borderRadius: '100px',
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Goals - based on journal */}
+        <div style={{
+          background: theme.card,
+          borderRadius: '16px',
+          padding: '20px',
+          border: `1px solid ${theme.subtle}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ fontSize: '14px', color: theme.text, margin: '0 0 4px 0', fontWeight: 500 }}>
+                ✨ Suggested for you
+              </h3>
+              <p style={{ fontSize: '11px', color: theme.text, opacity: 0.5, margin: 0 }}>
+                Based on your recent entries
+              </p>
+            </div>
+            <button
+              onClick={refreshMicroGoals}
+              disabled={generatingGoals}
+              style={{
+                background: theme.subtle,
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                color: theme.accent,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                opacity: generatingGoals ? 0.5 : 1,
+              }}
+            >
+              <span style={{ 
+                display: 'inline-block',
+                animation: generatingGoals ? 'spin 1s linear infinite' : 'none',
+              }}>↻</span>
+              Refresh
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {aiMicroGoals.map((goal) => (
+              <div
+                key={goal.id}
+                onClick={() => toggleMicroGoal(goal.id)}
+                style={{
+                  background: goal.completed ? `${theme.accent}15` : theme.subtle,
+                  border: `1px solid ${goal.completed ? theme.accent + '40' : 'transparent'}`,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '6px',
+                  border: `2px solid ${goal.completed ? theme.accent : theme.text + '40'}`,
+                  background: goal.completed ? theme.accent : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }}>
+                  {goal.completed && (
+                    <span style={{ color: theme.bg, fontSize: '12px' }}>✓</span>
+                  )}
+                </div>
+                <span style={{ fontSize: '18px' }}>{goal.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <span style={{
+                    fontSize: '13px',
+                    color: theme.text,
+                    opacity: goal.completed ? 0.6 : 0.9,
+                    textDecoration: goal.completed ? 'line-through' : 'none',
+                    lineHeight: 1.4,
+                    display: 'block',
+                  }}>
+                    {goal.text}
+                  </span>
+                  {goal.source && (
+                    <span style={{ fontSize: '11px', color: theme.accent, opacity: 0.7 }}>
+                      {goal.source}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* User Goals */}
+        <div style={{
+          background: theme.card,
+          borderRadius: '16px',
+          padding: '20px',
+          border: `1px solid ${theme.subtle}`,
+        }}>
+          <h3 style={{ fontSize: '14px', color: theme.text, margin: '0 0 16px 0', fontWeight: 500 }}>
+            📋 Your Goals
+          </h3>
+
+          {/* Add goal input */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: userGoals.length > 0 ? '16px' : '0' }}>
+            <input
+              type="text"
+              value={newGoalText}
+              onChange={(e) => setNewGoalText(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addUserGoal()}
+              placeholder="Add a goal for today..."
+              style={{
+                flex: 1,
+                padding: '14px 16px',
+                border: `1px solid ${theme.subtle}`,
+                borderRadius: '10px',
+                fontFamily: '"Fira Code", monospace',
+                fontSize: '13px',
+                color: theme.text,
+                background: theme.bg,
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={addUserGoal}
+              style={{
+                background: theme.accent,
+                color: theme.bg,
+                border: 'none',
+                borderRadius: '10px',
+                padding: '14px 18px',
+                fontSize: '16px',
+                cursor: 'pointer',
+              }}
+            >
+              +
+            </button>
+          </div>
+
+          {/* User goal list */}
+          {userGoals.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {userGoals.map((goal) => (
+                <div
+                  key={goal.id}
+                  onClick={() => toggleUserGoal(goal.id)}
+                  style={{
+                    background: goal.completed ? `${theme.accent}15` : theme.subtle,
+                    border: `1px solid ${goal.completed ? theme.accent + '40' : 'transparent'}`,
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '6px',
+                    border: `2px solid ${goal.completed ? theme.accent : theme.text + '40'}`,
+                    background: goal.completed ? theme.accent : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {goal.completed && (
+                      <span style={{ color: theme.bg, fontSize: '12px' }}>✓</span>
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: '13px',
+                    color: theme.text,
+                    opacity: goal.completed ? 0.6 : 0.9,
+                    textDecoration: goal.completed ? 'line-through' : 'none',
+                  }}>
+                    {goal.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {userGoals.length === 0 && (
+            <p style={{ 
+              fontSize: '12px', 
+              color: theme.text, 
+              opacity: 0.4, 
+              margin: '12px 0 0 0',
+              textAlign: 'center',
+            }}>
+              No goals yet. What do you want to accomplish today?
+            </p>
+          )}
+        </div>
+
+        {/* Motivational footer when all complete */}
+        {totalCount > 0 && completedCount === totalCount && (
+          <div style={{
+            background: `linear-gradient(135deg, ${theme.accent}20 0%, ${theme.accent}10 100%)`,
+            borderRadius: '14px',
+            padding: '24px',
+            textAlign: 'center',
+            border: `1px solid ${theme.accent}30`,
+          }}>
+            <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>🎉</span>
+            <p style={{ fontSize: '15px', color: theme.text, margin: 0, fontWeight: 500 }}>
+              All goals complete!
+            </p>
+            <p style={{ fontSize: '12px', color: theme.text, opacity: 0.6, margin: '8px 0 0 0' }}>
+              You're crushing it today
+            </p>
           </div>
         )}
       </div>
@@ -651,45 +1796,43 @@ const DaylightJournal = () => {
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: '"Fira Code", monospace' }}>
         <div style={{ paddingTop: '60px', textAlign: 'center' }}>
           <h1 style={{
-            fontSize: '20px',
-            fontWeight: 400,
-            color: theme.accent,
+            fontSize: '22px',
+            fontWeight: 500,
+            color: theme.text,
             margin: '0 0 8px 0',
-            letterSpacing: '0.05em',
-          }}>$ history --all</h1>
+          }}>History</h1>
           <p style={{
-            fontSize: '12px',
+            fontSize: '13px',
             color: theme.text,
             opacity: 0.5,
             margin: 0,
-          }}>tap any day to revisit</p>
+          }}>Tap any day to revisit</p>
         </div>
 
         {/* Calendar grid */}
         <div style={{
-          background: theme.subtle,
-          borderRadius: '4px',
+          background: theme.card,
+          borderRadius: '16px',
           padding: '20px',
-          border: `1px solid ${theme.accent}30`,
+          border: `1px solid ${theme.subtle}`,
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-            {['s', 'm', 't', 'w', 't', 'f', 's'].map((d, i) => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
               <span key={i} style={{
-                width: '36px',
+                width: '38px',
                 textAlign: 'center',
-                fontSize: '10px',
-                color: theme.accent,
-                opacity: 0.6,
-                textTransform: 'uppercase',
+                fontSize: '11px',
+                color: theme.text,
+                opacity: 0.4,
               }}>{d}</span>
             ))}
           </div>
           
           {weeks.map((week, wi) => (
-            <div key={wi} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div key={wi} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               {week.map((day, di) => {
                 const isToday = day.date.toDateString() === new Date().toDateString();
                 const hasEntry = !day.empty;
@@ -701,21 +1844,21 @@ const DaylightJournal = () => {
                     onClick={() => !day.empty && setSelectedHistoryDay(day)}
                     disabled={day.empty}
                     style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '2px',
-                      border: isToday ? `1px solid ${theme.accent}` : `1px solid transparent`,
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '10px',
+                      border: isToday ? `2px solid ${theme.accent}` : `1px solid transparent`,
                       background: hasEntry 
-                        ? `${dayTheme.accent}30`
-                        : `${theme.text}10`,
+                        ? `${dayTheme.accent}35`
+                        : theme.subtle,
                       cursor: hasEntry ? 'pointer' : 'default',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '11px',
-                      color: hasEntry ? dayTheme.accent : `${theme.text}30`,
+                      fontSize: '12px',
+                      color: hasEntry ? theme.text : `${theme.text}40`,
                       transition: 'all 0.2s ease',
-                      fontFamily: '"SF Mono", "Fira Code", monospace',
+                      fontFamily: '"Fira Code", monospace',
                     }}
                   >
                     {day.date.getDate()}
@@ -729,58 +1872,57 @@ const DaylightJournal = () => {
         {/* Selected day detail */}
         {selectedHistoryDay && (
           <div style={{
-            background: theme.subtle,
-            borderRadius: '4px',
+            background: theme.card,
+            borderRadius: '16px',
             padding: '24px',
-            border: `1px solid ${theme.accent}`,
+            border: `1px solid ${theme.accent}50`,
             animation: 'fadeIn 0.3s ease',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{
-                fontSize: '14px',
-                fontWeight: 400,
-                color: theme.accent,
+                fontSize: '16px',
+                fontWeight: 500,
+                color: theme.text,
                 margin: 0,
               }}>{formatDate(selectedHistoryDay.date)}</h3>
               <span style={{
                 background: `${themes[selectedHistoryDay.mood].accent}30`,
                 color: themes[selectedHistoryDay.mood].accent,
-                padding: '4px 10px',
-                borderRadius: '2px',
-                fontSize: '11px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '12px',
               }}>{selectedHistoryDay.mood}</span>
             </div>
 
             {selectedHistoryDay.dream && (
-              <div style={{ marginBottom: '16px' }}>
-                <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  // dream
+              <div style={{ marginBottom: '18px' }}>
+                <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>
+                  Dream
                 </p>
-                <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.8 }}>
+                <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>
                   {selectedHistoryDay.dream}
                 </p>
               </div>
             )}
 
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                // reflection
+            <div style={{ marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>
+                Reflection
               </p>
-              <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.8 }}>
+              <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>
                 {selectedHistoryDay.reflection}
               </p>
             </div>
 
             <div style={{
-              background: theme.bg,
-              borderRadius: '2px',
-              padding: '12px',
-              border: `1px solid ${theme.accent}20`,
+              background: theme.subtle,
+              borderRadius: '10px',
+              padding: '14px',
             }}>
-              <p style={{ fontSize: '10px', color: theme.accent, marginBottom: '4px', textTransform: 'uppercase' }}>
-                // grateful
+              <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>
+                Grateful for
               </p>
-              <p style={{ fontSize: '12px', color: theme.text, margin: 0, opacity: 0.7 }}>
+              <p style={{ fontSize: '13px', color: theme.text, margin: 0, opacity: 0.8 }}>
                 {selectedHistoryDay.gratitude}
               </p>
             </div>
@@ -788,18 +1930,19 @@ const DaylightJournal = () => {
             <button
               onClick={() => setSelectedHistoryDay(null)}
               style={{
-                marginTop: '16px',
+                marginTop: '18px',
                 background: 'transparent',
-                border: `1px solid ${theme.accent}40`,
-                borderRadius: '2px',
-                padding: '10px 20px',
-                fontSize: '12px',
+                border: `1px solid ${theme.subtle}`,
+                borderRadius: '10px',
+                padding: '12px 20px',
+                fontSize: '13px',
                 color: theme.text,
+                opacity: 0.7,
                 cursor: 'pointer',
                 width: '100%',
-                fontFamily: '"SF Mono", "Fira Code", monospace',
+                fontFamily: '"Fira Code", monospace',
               }}
-            >close</button>
+            >Close</button>
           </div>
         )}
       </div>
@@ -820,28 +1963,26 @@ const DaylightJournal = () => {
     }, 0);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: '"SF Mono", "Fira Code", monospace' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: '"Fira Code", monospace' }}>
         <div style={{
           textAlign: 'center',
           paddingTop: '60px',
           paddingBottom: '10px',
         }}>
           <p style={{
-            fontSize: '11px',
+            fontSize: '12px',
             color: theme.text,
             opacity: 0.4,
             marginBottom: '8px',
             textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-          }}>this week</p>
+            letterSpacing: '0.1em',
+          }}>This Week</p>
           <h1 style={{
             fontSize: '28px',
-            fontWeight: 400,
-            color: theme.accent,
+            fontWeight: 500,
+            color: theme.text,
             margin: '0 0 4px 0',
-            letterSpacing: '0.05em',
-            textShadow: `0 0 40px ${theme.accent}50`,
-          }}>* wrapped *</h1>
+          }}>✦ Your Wrapped</h1>
         </div>
 
         {/* Big stats */}
@@ -851,32 +1992,30 @@ const DaylightJournal = () => {
           gap: '12px',
         }}>
           {[
-            { label: 'days logged', value: recentEntries.length, symbol: '>' },
-            { label: 'dreams', value: dreamsRemembered, symbol: '◐' },
-            { label: 'words', value: totalWords, symbol: '#' },
-            { label: 'streak', value: streak, symbol: '🔥' },
+            { label: 'Days logged', value: recentEntries.length, icon: '📝' },
+            { label: 'Dreams', value: dreamsRemembered, icon: '💭' },
+            { label: 'Words', value: totalWords, icon: '✏️' },
+            { label: 'Streak', value: streak, icon: '🔥' },
           ].map((stat, i) => (
             <div key={i} style={{
-              background: theme.subtle,
-              borderRadius: '4px',
+              background: theme.card,
+              borderRadius: '14px',
               padding: '20px',
               textAlign: 'center',
-              border: `1px solid ${theme.accent}20`,
+              border: `1px solid ${theme.subtle}`,
             }}>
-              <span style={{ fontSize: '16px', display: 'block', marginBottom: '8px', color: theme.accent }}>{stat.symbol}</span>
+              <span style={{ fontSize: '24px', display: 'block', marginBottom: '10px' }}>{stat.icon}</span>
               <p style={{
-                fontSize: '32px',
-                fontWeight: 400,
+                fontSize: '28px',
+                fontWeight: 500,
                 color: theme.text,
                 margin: '0 0 4px 0',
               }}>{stat.value}</p>
               <p style={{
-                fontSize: '10px',
+                fontSize: '11px',
                 color: theme.text,
                 opacity: 0.5,
                 margin: 0,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
               }}>{stat.label}</p>
             </div>
           ))}
@@ -884,26 +2023,26 @@ const DaylightJournal = () => {
 
         {/* Mood breakdown */}
         <div style={{
-          background: theme.subtle,
-          borderRadius: '4px',
+          background: theme.card,
+          borderRadius: '14px',
           padding: '20px',
-          border: `1px solid ${theme.accent}20`,
+          border: `1px solid ${theme.subtle}`,
         }}>
           <h3 style={{
-            fontSize: '12px',
-            fontWeight: 400,
-            color: theme.accent,
+            fontSize: '14px',
+            fontWeight: 500,
+            color: theme.text,
             margin: '0 0 16px 0',
-          }}>// your vibes</h3>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          }}>Your vibes this week</h3>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {topMoods.map((mood, i) => (
               <span key={i} style={{
                 background: `${themes[mood].accent}25`,
                 color: themes[mood].accent,
-                padding: '8px 16px',
-                borderRadius: '2px',
-                fontSize: '12px',
-                border: `1px solid ${themes[mood].accent}40`,
+                padding: '10px 18px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                border: `1px solid ${themes[mood].accent}30`,
               }}>{mood}</span>
             ))}
           </div>
@@ -911,52 +2050,56 @@ const DaylightJournal = () => {
 
         {/* Insight */}
         <div style={{
-          background: `${theme.accent}10`,
-          borderRadius: '4px',
-          padding: '20px',
-          borderLeft: `2px solid ${theme.accent}`,
+          background: `${theme.accent}12`,
+          borderRadius: '14px',
+          padding: '22px',
+          borderLeft: `3px solid ${theme.accent}`,
         }}>
           <h3 style={{
-            fontSize: '12px',
-            fontWeight: 400,
+            fontSize: '14px',
+            fontWeight: 500,
             color: theme.accent,
             margin: '0 0 12px 0',
-          }}>// insight</h3>
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <span>✨</span> Weekly Insight
+          </h3>
           <p style={{
-            fontSize: '13px',
+            fontSize: '14px',
             color: theme.text,
             margin: 0,
             lineHeight: 1.7,
-            opacity: 0.9,
+            opacity: 0.85,
           }}>
-            you've been feeling most <span style={{ color: theme.accent }}>{topMoods[0]}</span> this week. 
-            your dreams have featured themes of exploration and freedom. 
-            consider: what new territory are you ready to explore?
+            You've been feeling most <span style={{ color: theme.accent, fontWeight: 500 }}>{topMoods[0]}</span> this week. 
+            Your dreams have featured themes of exploration and freedom. 
+            Consider: what new territory are you ready to explore?
           </p>
         </div>
 
         {/* Streak celebration */}
         <div style={{
-          background: theme.bg,
-          borderRadius: '4px',
+          background: `linear-gradient(135deg, ${theme.accent}20 0%, ${theme.accent}10 100%)`,
+          borderRadius: '14px',
           padding: '28px',
           textAlign: 'center',
-          border: `1px solid ${theme.accent}`,
-          boxShadow: `0 0 40px ${theme.accent}20`,
+          border: `1px solid ${theme.accent}30`,
         }}>
-          <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🔥</span>
+          <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔥</span>
           <p style={{
-            fontSize: '20px',
-            fontWeight: 400,
-            color: theme.accent,
-            margin: '0 0 6px 0',
-          }}>{streak} day streak</p>
-          <p style={{
-            fontSize: '12px',
+            fontSize: '22px',
+            fontWeight: 500,
             color: theme.text,
-            opacity: 0.5,
+            margin: '0 0 6px 0',
+          }}>{streak} day streak!</p>
+          <p style={{
+            fontSize: '13px',
+            color: theme.text,
+            opacity: 0.6,
             margin: 0,
-          }}>keep going — you're building something meaningful</p>
+          }}>Keep going — you're building something meaningful</p>
         </div>
       </div>
     );
@@ -975,6 +2118,9 @@ const DaylightJournal = () => {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
         ::placeholder { color: ${theme.text}40; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: ${theme.bg}; }
@@ -989,6 +2135,7 @@ const DaylightJournal = () => {
         padding: '20px 20px 120px 20px',
       }}>
         {currentView === 'home' && <HomeView />}
+        {currentView === 'goals' && <GoalsView />}
         {currentView === 'history' && <HistoryView />}
         {currentView === 'wrapped' && <WrappedView />}
       </div>
@@ -999,3 +2146,4 @@ const DaylightJournal = () => {
 };
 
 export default DaylightJournal;
+

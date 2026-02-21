@@ -6,7 +6,7 @@ const handleDreamSubmission = async () => {
         
         // Call the Firebase Cloud Function to generate a goal
         try {
-            const response = await fetch('https://<your-firebase-project-id>.cloudfunctions.net/generateGoalFromDream', {
+            const response = await fetch('https://nocturne-87c33.cloudfunctions.net/generateGoalFromDream', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

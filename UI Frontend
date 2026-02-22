@@ -53,7 +53,11 @@ const DaylightJournal = () => {
   // ---- Goals state ----
   const [userGoals, setUserGoals] = useState([]);
   const [newGoalText, setNewGoalText] = useState('');
-  const [aiMicroGoals, setAiMicroGoals] = useState([]);
+  const [aiMicroGoals, setAiMicroGoals] = useState([
+    { id: 1, text: 'Take 3 deep breaths before your first meeting', completed: false, icon: '🧘' },
+    { id: 2, text: "Write down one thing you're looking forward to", completed: false, icon: '✏️' },
+    { id: 3, text: 'Step outside for 5 minutes of fresh air', completed: false, icon: '🌿' },
+  ]);
   const [generatingGoals, setGeneratingGoals] = useState(false);
 
   // ---- Firestore state ----
@@ -823,6 +827,11 @@ const DaylightJournal = () => {
       }
     };
 
+  // ---- GoalsView ----
+  const GoalsView = () => {
+    const refreshMicroGoals = () => {
+      refreshMicroGoalsWithAI();
+    };
     const completedCount = [...aiMicroGoals, ...userGoals].filter(g => g.completed).length;
     const totalCount = aiMicroGoals.length + userGoals.length;
 
@@ -879,9 +888,14 @@ const DaylightJournal = () => {
                     {(goal.source || goal.why) && <span style={{ fontSize: '11px', color: theme.accent, opacity: 0.7 }}>{goal.source || goal.why}</span>}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <span style={{ fontSize: '18px' }}>{goal.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '13px', color: theme.text, opacity: goal.completed ? 0.6 : 0.9, textDecoration: goal.completed ? 'line-through' : 'none', lineHeight: 1.4, display: 'block' }}>{goal.text}</span>
+                  {goal.source && <span style={{ fontSize: '11px', color: theme.accent, opacity: 0.7 }}>{goal.source}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', border: `1px solid ${theme.subtle}` }}>

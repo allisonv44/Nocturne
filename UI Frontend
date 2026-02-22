@@ -11,6 +11,12 @@ import {
   onSnapshot, doc, updateDoc, serverTimestamp,
 } from 'firebase/firestore';
 
+// Cloud Function URLs — update these after `firebase deploy --only functions`
+const CF_URLS = {
+  dream: 'https://generategoalfromdream-r7ou5o5rea-uc.a.run.app',
+  journal: 'https://processjournalentry-r7ou5o5rea-uc.a.run.app',
+};
+
 const DaylightJournal = () => {
   // ---- Demo UI state ----
   const [currentView, setCurrentView] = useState('home');
@@ -18,7 +24,7 @@ const DaylightJournal = () => {
   const [demoDay, setDemoDay] = useState(0);
   const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
   const [quickNote, setQuickNote] = useState('');
-  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [noteSaving, setNoteSaving] = useState(false);
   const [dreamSubmitted, setDreamSubmitted] = useState(false);
   const [eveningSubmitted, setEveningSubmitted] = useState(false);
 
@@ -34,11 +40,15 @@ const DaylightJournal = () => {
   // ---- Text state ----
   const dreamRef = useRef(null);
   const eveningRef = useRef(null);
+  const historyDetailRef = useRef(null);
   const [dreamText, setDreamText] = useState('');
   const [eveningText, setEveningText] = useState('');
-  const [showAISuggestions, setShowAISuggestions] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState(null);
+
+  // ---- AI result state ----
+  const [dreamAiResult, setDreamAiResult] = useState(null);
+  const [dreamAiLoading, setDreamAiLoading] = useState(false);
+  const [journalAiResult, setJournalAiResult] = useState(null);
+  const [journalAiLoading, setJournalAiLoading] = useState(false);
 
   // ---- Goals state ----
   const [userGoals, setUserGoals] = useState([]);
@@ -57,6 +67,16 @@ const DaylightJournal = () => {
   const [dreamSaving, setDreamSaving] = useState(false);
   const [eveningSaving, setEveningSaving] = useState(false);
 
+  // ---- History edit state ----
+  const [editingHistory, setEditingHistory] = useState(false);
+  const [editDreamText, setEditDreamText] = useState('');
+  const [editJournalText, setEditJournalText] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+
+  // ---- Calendar state (lifted from HistoryView to prevent reset on re-render) ----
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+
   // ---- Demo day data ----
   const demoDays = [
     { mood: 'peaceful', dream: 'I was walking through a quiet forest, the trees were glowing softly.', reflection: 'Today felt balanced. Had a good conversation with mom.' },
@@ -69,59 +89,7 @@ const DaylightJournal = () => {
 
   const currentDemoDay = demoDays[demoDay % demoDays.length];
 
-  const generateNewMicroGoalsForMood = useCallback((mood) => {
-    const moodBasedGoals = {
-      peaceful: [
-        { text: 'Find a quiet spot and sit for 5 minutes', icon: '🧘', source: 'You felt calm yesterday' },
-        { text: 'Write down what peace means to you today', icon: '✏️', source: 'From your reflection' },
-        { text: 'Take a slow walk without your phone', icon: '🚶', source: 'Based on your dream themes' },
-      ],
-      energetic: [
-        { text: 'Channel your energy into a quick workout', icon: '💪', source: 'Matching your vibe' },
-        { text: "Start that project you've been putting off", icon: '🚀', source: 'You mentioned feeling motivated' },
-        { text: 'Dance to your favorite song', icon: '💃', source: 'Based on your mood' },
-      ],
-      reflective: [
-        { text: 'Write a letter to your future self', icon: '💌', source: "You've been introspective" },
-        { text: 'Look through old photos for 10 minutes', icon: '📸', source: 'From your dream about memories' },
-        { text: 'Journal about a turning point in your life', icon: '📖', source: 'Based on your reflections' },
-      ],
-      creative: [
-        { text: 'Sketch something without lifting your pen', icon: '✏️', source: 'Your creative energy is high' },
-        { text: 'Write 100 words of fiction', icon: '📝', source: 'From your lighthouse keeper idea' },
-        { text: 'Take a photo from an unusual angle', icon: '📷', source: 'Based on your dreams' },
-      ],
-      grateful: [
-        { text: 'Send a thank you message to someone', icon: '💬', source: 'You mentioned feeling thankful' },
-        { text: 'Write 3 things you appreciate about yourself', icon: '💝', source: 'From your gratitude patterns' },
-        { text: 'Do something kind for a stranger', icon: '🌟', source: 'Based on your reflections' },
-      ],
-      calm: [
-        { text: 'Make a cup of tea and drink it slowly', icon: '🍵', source: 'Matching your peaceful mood' },
-        { text: 'Listen to ambient sounds for 5 minutes', icon: '🎧', source: 'From your dream imagery' },
-        { text: 'Declutter one small space', icon: '✨', source: 'Based on your calm state' },
-      ],
-      inspired: [
-        { text: 'Write down 5 ideas, no matter how wild', icon: '💡', source: 'Your inspiration is flowing' },
-        { text: "Research something you're curious about", icon: '🔍', source: 'Based on your entries' },
-        { text: 'Share an idea with someone', icon: '💬', source: 'From your creative dreams' },
-      ],
-      cozy: [
-        { text: 'Create a cozy corner and read for 20 min', icon: '📚', source: 'Matching your mood' },
-        { text: 'Cook or bake something comforting', icon: '🍪', source: 'From your dream about warmth' },
-        { text: 'Reach out to someone you miss', icon: '💛', source: 'Based on your reflections' },
-      ],
-    };
-    const goals = moodBasedGoals[mood] || moodBasedGoals.peaceful;
-    setAiMicroGoals(goals.map((g, i) => ({ ...g, id: Date.now() + i, completed: false })));
-  }, []);
-
-  const generateNewMicroGoals = useCallback(() => {
-    generateNewMicroGoalsForMood(currentDemoDay.mood);
-  }, [currentDemoDay.mood, generateNewMicroGoalsForMood]);
-
   const nextDemoDay = useCallback(() => {
-    const next = (demoDay + 1) % demoDays.length;
     setDemoDay(d => d + 1);
     setDreamSubmitted(false);
     setEveningSubmitted(false);
@@ -129,31 +97,8 @@ const DaylightJournal = () => {
     setEveningText('');
     if (dreamRef.current) dreamRef.current.value = '';
     if (eveningRef.current) eveningRef.current.value = '';
-    setShowAISuggestions(false);
-    setAiSuggestions(null);
-    setSelectedGoal(null);
-    generateNewMicroGoalsForMood(demoDays[next].mood);
-  }, [demoDay, demoDays, generateNewMicroGoalsForMood]);
-
-  const generateAISuggestions = useCallback(() => {
-    setAiLoading(true);
-    setTimeout(() => {
-      setAiSuggestions({
-        insight: "I noticed you've been dreaming about open spaces and freedom lately, and your reflections mention feeling most alive during creative moments. There's a pattern of seeking expansion.",
-        goals: [
-          { type: 'creative', icon: '✏️', title: 'Write for 10 minutes', description: 'You mentioned a lighthouse keeper story idea 3 days ago. Spend 10 minutes expanding it.', why: 'Based on your note from Tuesday' },
-          { type: 'mindful', icon: '🧘', title: 'Morning walk without phone', description: 'Your dreams have featured open landscapes. Try a 15-minute walk, just observing.', why: 'Based on recurring dream themes' },
-          { type: 'connection', icon: '💬', title: 'Reach out to someone', description: "You felt energized after talking with Sarah. Send a quick message to someone you've been thinking about.", why: 'Based on your reflection from yesterday' },
-          { type: 'explore', icon: '🔍', title: 'Try something new', description: "Visit a place in your city you've never been, even just for 20 minutes.", why: 'Based on your gratitude patterns' },
-        ],
-        reflection_prompts: [
-          "What would your dream-self from last night want you to do today?",
-          "You mentioned feeling 'peaceful' often this week. What creates that feeling?",
-          "If you could give yourself permission to do one thing today, what would it be?",
-        ],
-      });
-      setAiLoading(false);
-    }, 1500);
+    setDreamAiResult(null);
+    setJournalAiResult(null);
   }, []);
 
   // ---- Static demo entries (History fallback) ----
@@ -242,7 +187,7 @@ const DaylightJournal = () => {
     return () => unsub();
   }, [user]);
 
-  // Sync today's dream/journal from Firestore on load
+  // Sync today's dream/journal from Firestore on load (includes AI results)
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     const todayDream = firestoreEntries.find(e => e.type === 'dream' && e.dateString === today);
@@ -251,6 +196,7 @@ const DaylightJournal = () => {
       setDreamText(todayDream.text);
       if (dreamRef.current) dreamRef.current.value = todayDream.text;
       setDreamSubmitted(true);
+      if (todayDream.aiResult) setDreamAiResult(todayDream.aiResult);
     }
     const todayJournal = firestoreEntries.find(e => e.type === 'journal' && e.dateString === today);
     if (todayJournal && !todayJournalEntryId) {
@@ -258,10 +204,17 @@ const DaylightJournal = () => {
       setEveningText(todayJournal.text);
       if (eveningRef.current) eveningRef.current.value = todayJournal.text;
       setEveningSubmitted(true);
+      if (todayJournal.aiResult) setJournalAiResult(todayJournal.aiResult);
     }
   }, [firestoreEntries]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Computed values ----
+
+  // Today's quick notes
+  const todayNotes = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return firestoreEntries.filter(e => e.type === 'note' && e.dateString === today);
+  }, [firestoreEntries]);
 
   // Merge Firestore entries into day-keyed objects for calendar
   const firestoreCalendarEntries = useMemo(() => {
@@ -269,12 +222,22 @@ const DaylightJournal = () => {
     const byDate = {};
     firestoreEntries.forEach(e => {
       const key = e.dateString;
-      if (!byDate[key]) byDate[key] = { date: e.date, dateString: key, empty: false };
-      if (e.type === 'dream') byDate[key].dream = e.text;
+      if (!key) return;
+      if (!byDate[key]) byDate[key] = { date: new Date(key + 'T12:00:00'), dateString: key, empty: false };
+      if (e.type === 'dream') {
+        byDate[key].dream = e.text;
+        byDate[key].dreamEntryId = e.id;
+      }
       if (e.type === 'journal') {
         byDate[key].reflection = e.text;
+        byDate[key].journalEntryId = e.id;
         byDate[key].mood = e.mood || 'peaceful';
         byDate[key].gratitude = e.aiResult?.insight || '';
+        byDate[key].aiResult = e.aiResult;
+      }
+      if (e.type === 'note') {
+        if (!byDate[key].notes) byDate[key].notes = [];
+        byDate[key].notes.push(e.text);
       }
     });
     return Object.values(byDate).sort((a, b) => new Date(a.dateString) - new Date(b.dateString));
@@ -361,18 +324,37 @@ const DaylightJournal = () => {
     setDreamSaving(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      if (todayDreamEntryId) {
-        await updateDoc(doc(db, 'users', user.uid, 'entries', todayDreamEntryId), { text: val, timestamp: serverTimestamp() });
+      let entryId = todayDreamEntryId;
+      if (entryId) {
+        await updateDoc(doc(db, 'users', user.uid, 'entries', entryId), { text: val, timestamp: serverTimestamp() });
       } else {
         const docRef = await addDoc(collection(db, 'users', user.uid, 'entries'), {
           userId: user.uid, type: 'dream', text: val, dateString: today, timestamp: serverTimestamp(),
         });
-        setTodayDreamEntryId(docRef.id);
-        fetch('https://generategoalfromdream-r7ou5o5rea-uc.a.run.app', {
+        entryId = docRef.id;
+        setTodayDreamEntryId(entryId);
+      }
+      // Always call cloud function (on create AND edit)
+      setDreamAiLoading(true);
+      try {
+        const todayNotesText = todayNotes.map(n => n.text).join('\n');
+        const response = await fetch(CF_URLS.dream, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dreamText: val, userId: user.uid, entryId: docRef.id }),
-        }).catch(err => console.error('Cloud function error:', err));
+          body: JSON.stringify({ dreamText: val, userId: user.uid, entryId, refreshGoals: !!todayDreamEntryId, quickNotes: todayNotesText }),
+        });
+        if (response.ok) {
+          const aiResult = await response.json();
+          setDreamAiResult(aiResult);
+        } else {
+          console.error('Cloud function returned', response.status);
+          setDreamAiResult({ error: true, insight: 'AI is temporarily unavailable — your dream was saved successfully. Insights will appear next time.', mood: null, goals: [] });
+        }
+      } catch (err) {
+        console.error('Cloud function error:', err);
+        setDreamAiResult({ error: true, insight: 'Could not reach the AI service — your dream was saved. Try refreshing goals later.', mood: null, goals: [] });
+      } finally {
+        setDreamAiLoading(false);
       }
     } catch (err) {
       console.error('Dream submission error:', err);
@@ -391,23 +373,99 @@ const DaylightJournal = () => {
     setEveningSaving(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      if (todayJournalEntryId) {
-        await updateDoc(doc(db, 'users', user.uid, 'entries', todayJournalEntryId), { text: val, timestamp: serverTimestamp() });
+      let entryId = todayJournalEntryId;
+      if (entryId) {
+        await updateDoc(doc(db, 'users', user.uid, 'entries', entryId), { text: val, timestamp: serverTimestamp() });
       } else {
         const docRef = await addDoc(collection(db, 'users', user.uid, 'entries'), {
           userId: user.uid, type: 'journal', text: val, dateString: today, timestamp: serverTimestamp(),
         });
-        setTodayJournalEntryId(docRef.id);
-        fetch('https://processjournalentry-r7ou5o5rea-uc.a.run.app', {
+        entryId = docRef.id;
+        setTodayJournalEntryId(entryId);
+      }
+      // Always call cloud function (on create AND edit)
+      setJournalAiLoading(true);
+      try {
+        const response = await fetch(CF_URLS.journal, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ journalText: val, userId: user.uid, entryId: docRef.id, dateString: today }),
-        }).catch(err => console.error('Cloud function error:', err));
+          body: JSON.stringify({ journalText: val, userId: user.uid, entryId, dateString: today }),
+        });
+        if (response.ok) {
+          const aiResult = await response.json();
+          setJournalAiResult(aiResult);
+        } else {
+          console.error('Cloud function returned', response.status);
+          setJournalAiResult({ error: true, insight: 'AI is temporarily unavailable — your journal was saved successfully. Insights will appear next time.', mood: null, goals: [] });
+        }
+      } catch (err) {
+        console.error('Cloud function error:', err);
+        setJournalAiResult({ error: true, insight: 'Could not reach the AI service — your journal was saved. Try again later.', mood: null, goals: [] });
+      } finally {
+        setJournalAiLoading(false);
       }
     } catch (err) {
       console.error('Evening submission error:', err);
     } finally {
       setEveningSaving(false);
+    }
+  };
+
+  // ---- Quick note handler ----
+  const handleQuickNoteSave = async () => {
+    const text = sanitizeText(quickNote, { trim: true, maxLen: 1000 });
+    if (!text) return;
+    if (!user) return;
+    setNoteSaving(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await addDoc(collection(db, 'users', user.uid, 'entries'), {
+        userId: user.uid, type: 'note', text, dateString: today, timestamp: serverTimestamp(),
+      });
+      setQuickNote('');
+    } catch (err) {
+      console.error('Quick note save error:', err);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  // ---- History edit handler ----
+  const handleHistoryEdit = async () => {
+    if (!user || !selectedHistoryDay) return;
+    setEditSaving(true);
+    try {
+      const dateStr = selectedHistoryDay.dateString;
+      const dreamEntry = firestoreEntries.find(e => e.type === 'dream' && e.dateString === dateStr);
+      const journalEntry = firestoreEntries.find(e => e.type === 'journal' && e.dateString === dateStr);
+      const cleanDream = sanitizeText(editDreamText, { trim: true, maxLen: 4000 });
+      const cleanJournal = sanitizeText(editJournalText, { trim: true, maxLen: 4000 });
+
+      // Update existing entries
+      if (dreamEntry && cleanDream && cleanDream !== dreamEntry.text) {
+        await updateDoc(doc(db, 'users', user.uid, 'entries', dreamEntry.id), { text: cleanDream });
+      }
+      if (journalEntry && cleanJournal && cleanJournal !== journalEntry.text) {
+        await updateDoc(doc(db, 'users', user.uid, 'entries', journalEntry.id), { text: cleanJournal });
+      }
+
+      // Create new entries if text was added where none existed
+      if (!dreamEntry && cleanDream) {
+        await addDoc(collection(db, 'users', user.uid, 'entries'), {
+          userId: user.uid, type: 'dream', text: cleanDream, dateString: dateStr, timestamp: serverTimestamp(),
+        });
+      }
+      if (!journalEntry && cleanJournal) {
+        await addDoc(collection(db, 'users', user.uid, 'entries'), {
+          userId: user.uid, type: 'journal', text: cleanJournal, dateString: dateStr, timestamp: serverTimestamp(),
+        });
+      }
+
+      setEditingHistory(false);
+    } catch (err) {
+      console.error('History edit error:', err);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -455,6 +513,54 @@ const DaylightJournal = () => {
     }
   };
 
+  // ---- AI Result Display Component ----
+  const AiResultDisplay = ({ aiResult, type }) => (
+    <div style={{ padding: '16px 0', fontFamily: '"Fira Code", monospace' }}>
+      {aiResult.mood && (
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span style={{ background: `${(themes[aiResult.mood] || theme).accent}25`, color: (themes[aiResult.mood] || theme).accent, padding: '8px 16px', borderRadius: '10px', fontSize: '13px', border: `1px solid ${(themes[aiResult.mood] || theme).accent}30` }}>
+            Feeling: {aiResult.mood}
+          </span>
+        </div>
+      )}
+      {aiResult.insight && (
+        <div style={{ background: `${theme.accent}12`, borderRadius: '12px', padding: '18px', marginBottom: '20px', borderLeft: `3px solid ${theme.accent}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '14px' }}>🔮</span>
+            <span style={{ fontSize: '11px', color: theme.accent, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pattern noticed</span>
+          </div>
+          <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{aiResult.insight}</p>
+        </div>
+      )}
+      {aiResult.goals && aiResult.goals.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: '13px', color: theme.text, margin: '0 0 12px 0', opacity: 0.6 }}>
+            {type === 'dream' ? "Today's goals" : 'Intentions for tomorrow'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {aiResult.goals.map((goal, i) => (
+              <div key={i} style={{ background: theme.subtle, borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '18px' }}>{goal.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '13px', color: theme.text, display: 'block', lineHeight: 1.4 }}>{goal.text}</span>
+                  {goal.why && <span style={{ fontSize: '11px', color: theme.accent, opacity: 0.7 }}>{goal.why}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ---- AI Loading Spinner ----
+  const AiLoadingSpinner = ({ message }) => (
+    <div style={{ textAlign: 'center', padding: '30px 0' }}>
+      <div style={{ width: '40px', height: '40px', border: `3px solid ${theme.subtle}`, borderTopColor: theme.accent, borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
+      <p style={{ fontSize: '13px', color: theme.text, opacity: 0.6, fontFamily: '"Fira Code", monospace' }}>{message || 'Processing...'}</p>
+    </div>
+  );
+
   // ---- SplashScreen ----
   const SplashScreen = () => (
     <div style={{ position: 'fixed', inset: 0, background: '#12161c', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 9999, animation: 'splashFade 2.2s ease forwards' }}>
@@ -496,7 +602,7 @@ const DaylightJournal = () => {
         { id: 'history', icon: '◫', label: 'history' },
         { id: 'wrapped', icon: '✦', label: 'wrapped' },
       ].map(item => (
-        <button key={item.id} onClick={() => { setCurrentView(item.id); setSelectedHistoryDay(null); }}
+        <button key={item.id} onClick={() => { setCurrentView(item.id); setSelectedHistoryDay(null); setEditingHistory(false); }}
           style={{ background: currentView === item.id ? theme.card : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', opacity: currentView === item.id ? 1 : 0.5, transition: 'all 0.3s ease', padding: '10px 20px', borderRadius: '12px' }}>
           <span style={{ fontSize: '18px', color: currentView === item.id ? theme.accent : theme.text }}>{item.icon}</span>
           <span style={{ fontFamily: '"Fira Code", monospace', fontSize: '10px', color: theme.text, letterSpacing: '0.02em' }}>{item.label}</span>
@@ -530,23 +636,6 @@ const DaylightJournal = () => {
       onMouseLeave={e => { e.target.style.opacity = '0.8'; e.target.style.borderColor = theme.subtle; }}>
       {text}
     </button>
-  );
-
-  // ---- SuggestionCard ----
-  const SuggestionCard = ({ icon, source, suggestion, micro, index }) => (
-    <div onClick={() => setSelectedGoal(index)}
-      style={{ background: selectedGoal === index ? theme.card : theme.subtle, border: `1px solid ${selectedGoal === index ? theme.accent : theme.card}`, borderRadius: '14px', padding: '18px', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: '"Fira Code", monospace' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <span style={{ fontSize: '16px' }}>{icon}</span>
-        <span style={{ fontSize: '11px', color: theme.text, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{source}</span>
-        {selectedGoal === index && <span style={{ marginLeft: 'auto', background: theme.accent, color: theme.bg, fontSize: '10px', padding: '4px 10px', borderRadius: '6px', fontWeight: 500 }}>selected</span>}
-      </div>
-      <p style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', lineHeight: 1.6, opacity: 0.85 }}>{suggestion}</p>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: `${theme.accent}20`, padding: '8px 12px', borderRadius: '8px' }}>
-        <span style={{ fontSize: '12px', color: theme.accent }}>→</span>
-        <span style={{ fontSize: '12px', color: theme.accent }}>{micro}</span>
-      </div>
-    </div>
   );
 
   // ---- HomeView ----
@@ -589,89 +678,74 @@ const DaylightJournal = () => {
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"Fira Code", monospace' }}>
-                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>✨</span>
-                <h2 style={{ fontSize: '18px', fontWeight: 500, color: theme.text, margin: '0 0 8px 0' }}>Dream captured!</h2>
-                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.5, margin: '0 0 20px 0' }}>The more you record, the more you'll remember</p>
-                <div style={{ background: theme.bg, border: `1px solid ${theme.subtle}`, borderRadius: '12px', padding: '16px', textAlign: 'left', color: theme.text, fontSize: '13px', lineHeight: 1.6, opacity: 0.8 }}>
+              <div style={{ fontFamily: '"Fira Code", monospace' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '16px', fontWeight: 500, color: theme.text, margin: 0 }}>✨ Dream captured</h2>
+                  <button onClick={() => setDreamSubmitted(false)}
+                    style={{ background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '8px', padding: '6px 14px', fontSize: '12px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                    Edit
+                  </button>
+                </div>
+                <div style={{ background: theme.bg, border: `1px solid ${theme.subtle}`, borderRadius: '12px', padding: '14px', color: theme.text, fontSize: '13px', lineHeight: 1.6, opacity: 0.8, marginBottom: '8px' }}>
                   {dreamText || currentDemoDay.dream}
                 </div>
-                <button onClick={() => setDreamSubmitted(false)}
-                  style={{ marginTop: '16px', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', padding: '10px 20px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
-                  Edit
-                </button>
+                {dreamAiLoading && <AiLoadingSpinner message="Nocturne is reading your dream..." />}
+                {dreamAiResult && <AiResultDisplay aiResult={dreamAiResult} type="dream" />}
               </div>
             )}
           </div>
         )}
 
-        {/* Afternoon: Suggestions */}
+        {/* Afternoon: AI Insights + Quick Notes */}
         {demoTime === 'afternoon' && (
           <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.subtle}`, fontFamily: '"Fira Code", monospace' }}>
-            {!showAISuggestions ? (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>✨</span>
-                <h2 style={{ fontSize: '17px', fontWeight: 500, color: theme.text, margin: '0 0 8px 0' }}>Get personalized ideas</h2>
-                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.5, margin: '0 0 24px 0', lineHeight: 1.6, maxWidth: '280px', marginLeft: 'auto', marginRight: 'auto' }}>
-                  We'll look at your dreams, reflections, and notes to suggest ideas for today
-                </p>
-                <button onClick={() => { setShowAISuggestions(true); generateAISuggestions(); }}
-                  style={{ background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color: theme.bg, border: 'none', borderRadius: '12px', padding: '16px 32px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
-                  Show me →
-                </button>
-              </div>
-            ) : aiLoading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ width: '40px', height: '40px', border: `3px solid ${theme.subtle}`, borderTopColor: theme.accent, borderRadius: '50%', margin: '0 auto 20px', animation: 'spin 1s linear infinite' }} />
-                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.6 }}>Looking through your journal...</p>
-              </div>
-            ) : aiSuggestions && (
+            {dreamAiResult ? (
               <>
-                <div style={{ background: `${theme.accent}12`, borderRadius: '12px', padding: '18px', marginBottom: '20px', borderLeft: `3px solid ${theme.accent}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '14px' }}>🔮</span>
-                    <span style={{ fontSize: '11px', color: theme.accent, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pattern noticed</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '20px' }}>✨</span>
+                  <div>
+                    <h2 style={{ fontSize: '15px', fontWeight: 500, color: theme.text, margin: 0 }}>Your morning insights</h2>
+                    <p style={{ fontSize: '11px', color: theme.text, opacity: 0.5, margin: 0 }}>Based on your dream this morning</p>
                   </div>
-                  <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{aiSuggestions.insight}</p>
                 </div>
-                <h3 style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', opacity: 0.6 }}>Ideas for today</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                  {aiSuggestions.goals.map((goal, i) => (
-                    <div key={i} onClick={() => setSelectedGoal(selectedGoal === i ? null : i)}
-                      style={{ background: selectedGoal === i ? `${theme.accent}15` : theme.subtle, border: `1px solid ${selectedGoal === i ? theme.accent : theme.card}`, borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <span style={{ fontSize: '20px' }}>{goal.icon}</span>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <h4 style={{ fontSize: '14px', color: theme.text, margin: 0, fontWeight: 500 }}>{goal.title}</h4>
-                            {selectedGoal === i && <span style={{ background: theme.accent, color: theme.bg, fontSize: '10px', padding: '4px 10px', borderRadius: '6px' }}>Today's goal</span>}
-                          </div>
-                          <p style={{ fontSize: '12px', color: theme.text, opacity: 0.7, margin: '0 0 8px 0', lineHeight: 1.5 }}>{goal.description}</p>
-                          <p style={{ fontSize: '11px', color: theme.accent, margin: 0, opacity: 0.8 }}>💡 {goal.why}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <h3 style={{ fontSize: '13px', color: theme.text, margin: '0 0 14px 0', opacity: 0.6 }}>Questions to ponder</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                  {aiSuggestions.reflection_prompts.map((prompt, i) => (
-                    <div key={i} style={{ background: theme.subtle, borderRadius: '10px', padding: '14px 16px', fontSize: '13px', color: theme.text, opacity: 0.8, lineHeight: 1.5, fontStyle: 'italic' }}>"{prompt}"</div>
-                  ))}
-                </div>
-                <button onClick={() => generateAISuggestions()}
-                  style={{ width: '100%', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', padding: '14px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span>↻</span> Get new ideas
-                </button>
+                <AiResultDisplay aiResult={dreamAiResult} type="dream" />
               </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>💭</span>
+                <h2 style={{ fontSize: '17px', fontWeight: 500, color: theme.text, margin: '0 0 8px 0' }}>No dream recorded yet</h2>
+                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.5, margin: '0 0 24px 0', lineHeight: 1.6, maxWidth: '280px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  Write your morning dream to get personalized insights and goals
+                </p>
+                <button onClick={() => setDemoTime('morning')}
+                  style={{ background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color: theme.bg, border: 'none', borderRadius: '12px', padding: '14px 28px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                  Write a dream →
+                </button>
+              </div>
             )}
+
+            {/* Quick notes section */}
             <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: `1px solid ${theme.subtle}` }}>
               <p style={{ fontSize: '12px', color: theme.text, opacity: 0.5, margin: '0 0 12px 0' }}>Capture a quick thought</p>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <input type="text" value={quickNote} onChange={e => setQuickNote(e.target.value)} placeholder="What's on your mind..."
+                <input type="text" value={quickNote} onChange={e => setQuickNote(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleQuickNoteSave()}
+                  placeholder="What's on your mind..."
                   style={{ flex: 1, padding: '14px 16px', border: `1px solid ${theme.subtle}`, borderRadius: '10px', fontFamily: '"Fira Code", monospace', fontSize: '13px', color: theme.text, background: theme.bg, outline: 'none' }} />
-                <button style={{ background: theme.accent, color: theme.bg, border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>Save</button>
+                <button onClick={handleQuickNoteSave} disabled={noteSaving}
+                  style={{ background: theme.accent, color: theme.bg, border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 500, cursor: noteSaving ? 'not-allowed' : 'pointer', fontFamily: '"Fira Code", monospace', opacity: noteSaving ? 0.7 : 1 }}>
+                  {noteSaving ? '...' : 'Save'}
+                </button>
               </div>
+              {todayNotes.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
+                  {todayNotes.map((note, i) => (
+                    <div key={note.id || i} style={{ background: theme.subtle, borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: theme.text, opacity: 0.7, lineHeight: 1.5 }}>
+                      {note.text}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -696,21 +770,23 @@ const DaylightJournal = () => {
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: '"Fira Code", monospace' }}>
-                <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>🌙</span>
-                <h2 style={{ fontSize: '18px', fontWeight: 500, color: theme.text, margin: '0 0 8px 0' }}>Day complete!</h2>
-                <p style={{ fontSize: '13px', color: theme.text, opacity: 0.5, margin: '0 0 20px 0' }}>Another day of growth recorded. Rest well.</p>
-                <div style={{ background: theme.bg, border: `1px solid ${theme.subtle}`, borderRadius: '12px', padding: '16px', textAlign: 'left', color: theme.text, fontSize: '13px', lineHeight: 1.6, opacity: 0.8 }}>
+              <div style={{ fontFamily: '"Fira Code", monospace' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '16px', fontWeight: 500, color: theme.text, margin: 0 }}>🌙 Day complete</h2>
+                  <button onClick={() => setEveningSubmitted(false)}
+                    style={{ background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '8px', padding: '6px 14px', fontSize: '12px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                    Edit
+                  </button>
+                </div>
+                <div style={{ background: theme.bg, border: `1px solid ${theme.subtle}`, borderRadius: '12px', padding: '14px', color: theme.text, fontSize: '13px', lineHeight: 1.6, opacity: 0.8, marginBottom: '8px' }}>
                   {eveningText || currentDemoDay.reflection}
                 </div>
-                <div style={{ marginTop: '20px', padding: '14px', background: `${theme.accent}15`, border: `1px solid ${theme.accent}30`, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                {journalAiLoading && <AiLoadingSpinner message="Nocturne is reflecting on your day..." />}
+                {journalAiResult && <AiResultDisplay aiResult={journalAiResult} type="journal" />}
+                <div style={{ marginTop: '16px', padding: '14px', background: `${theme.accent}15`, border: `1px solid ${theme.accent}30`, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '20px' }}>🔥</span>
                   <span style={{ fontSize: '15px', color: theme.accent, fontWeight: 500 }}>{streak + 1} day streak!</span>
                 </div>
-                <button onClick={() => setEveningSubmitted(false)}
-                  style={{ marginTop: '16px', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', padding: '10px 20px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
-                  Edit
-                </button>
               </div>
             )}
           </div>
@@ -719,65 +795,37 @@ const DaylightJournal = () => {
     );
   };
 
-  // ---- AI-powered goal refresh ----
-  const refreshMicroGoalsWithAI = useCallback(async () => {
-    setGeneratingGoals(true);
-    try {
-      // Build context from whatever the user has written today
-      const today = new Date().toISOString().split('T')[0];
-      const contextDream = dreamText || firestoreEntries.find(e => e.type === 'dream' && e.dateString === today)?.text || '';
-      const contextJournal = eveningText || firestoreEntries.find(e => e.type === 'journal' && e.dateString === today)?.text || '';
-      const recentEntries = firestoreEntries.slice(0, 5).map(e => `${e.type}: ${e.text}`).join('\n');
+  // ---- GoalsView ----
+  const GoalsView = () => {
+    const refreshMicroGoals = async () => {
+      if (!user || generatingGoals) return;
+      setGeneratingGoals(true);
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const todayDream = firestoreEntries.find(e => e.type === 'dream' && e.dateString === today);
+        const todayNotesText = todayNotes.map(n => n.text).join('\n');
 
-      const prompt = `You are Nocturne, a compassionate journal companion. Based on this user's recent journal context, generate 3 specific, actionable micro-goals for today.
-
-Today's dream: ${contextDream || 'Not recorded yet'}
-Today's journal: ${contextJournal || 'Not recorded yet'}
-Recent entries: ${recentEntries || 'No entries yet'}
-
-Return ONLY a JSON array, no markdown:
-[
-  { "text": "A specific gentle action (15 words max)", "icon": "single emoji", "source": "brief reason connecting to their entries (10 words max)" },
-  { "text": "...", "icon": "...", "source": "..." },
-  { "text": "...", "icon": "...", "source": "..." }
-]`;
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 512,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
-
-      if (!response.ok) throw new Error('AI request failed');
-      const data = await response.json();
-      const text = data.content?.[0]?.text || '';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const goals = JSON.parse(clean);
-
-      if (Array.isArray(goals) && goals.length > 0) {
-        setAiMicroGoals(goals.map((g, i) => ({
-          id: Date.now() + i,
-          text: g.text,
-          icon: g.icon || '✨',
-          source: g.source || '',
-          completed: false,
-        })));
-      } else {
-        // Fall back to mood-based if AI returns unexpected format
-        generateNewMicroGoals();
+        const response = await fetch(CF_URLS.dream, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dreamText: todayDream?.text || 'No dream recorded today',
+            userId: user.uid,
+            refreshGoals: true,
+            quickNotes: todayNotesText,
+          }),
+        });
+        if (response.ok) {
+          const aiResult = await response.json();
+          setDreamAiResult(aiResult);
+          // Goals will also update via Firestore onSnapshot
+        }
+      } catch (err) {
+        console.error('Refresh goals error:', err);
+      } finally {
+        setGeneratingGoals(false);
       }
-    } catch (err) {
-      console.error('AI goal refresh error:', err);
-      // Graceful fallback to mood-based goals
-      generateNewMicroGoals();
-    } finally {
-      setGeneratingGoals(false);
-    }
-  }, [dreamText, eveningText, firestoreEntries, generateNewMicroGoals]);
+    };
 
   // ---- GoalsView ----
   const GoalsView = () => {
@@ -801,7 +849,7 @@ Return ONLY a JSON array, no markdown:
               <span style={{ fontSize: '14px', color: theme.accent, fontWeight: 500 }}>{completedCount}/{totalCount}</span>
             </div>
             <div style={{ background: theme.subtle, borderRadius: '100px', height: '8px', overflow: 'hidden' }}>
-              <div style={{ width: `${(completedCount / totalCount) * 100}%`, height: '100%', background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`, borderRadius: '100px', transition: 'width 0.3s ease' }} />
+              <div style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`, height: '100%', background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`, borderRadius: '100px', transition: 'width 0.3s ease' }} />
             </div>
           </div>
         )}
@@ -812,17 +860,33 @@ Return ONLY a JSON array, no markdown:
               <h3 style={{ fontSize: '14px', color: theme.text, margin: '0 0 4px 0', fontWeight: 500 }}>✨ Suggested for you</h3>
               <p style={{ fontSize: '11px', color: theme.text, opacity: 0.5, margin: 0 }}>Based on your recent entries</p>
             </div>
-            <button onClick={refreshMicroGoals} disabled={generatingGoals}
-              style={{ background: theme.subtle, border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: generatingGoals ? 0.5 : 1 }}>
-              <span style={{ display: 'inline-block', animation: generatingGoals ? 'spin 1s linear infinite' : 'none' }}>↻</span> Refresh
-            </button>
+            {user && (
+              <button onClick={refreshMicroGoals} disabled={generatingGoals}
+                style={{ background: theme.subtle, border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: generatingGoals ? 0.5 : 1 }}>
+                <span style={{ display: 'inline-block', animation: generatingGoals ? 'spin 1s linear infinite' : 'none' }}>↻</span> Refresh
+              </button>
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {aiMicroGoals.map(goal => (
-              <div key={goal.id} onClick={() => toggleMicroGoal(goal.id)}
-                style={{ background: goal.completed ? `${theme.accent}15` : theme.subtle, border: `1px solid ${goal.completed ? theme.accent + '40' : 'transparent'}`, borderRadius: '12px', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s ease' }}>
-                <div style={{ width: '22px', height: '22px', borderRadius: '6px', border: `2px solid ${goal.completed ? theme.accent : theme.text + '40'}`, background: goal.completed ? theme.accent : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}>
-                  {goal.completed && <span style={{ color: theme.bg, fontSize: '12px' }}>✓</span>}
+          {aiMicroGoals.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>💭</span>
+              <p style={{ fontSize: '13px', color: theme.text, opacity: 0.5, margin: 0, lineHeight: 1.6 }}>
+                No AI goals yet. Write a dream or journal entry to get personalized suggestions.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {aiMicroGoals.map(goal => (
+                <div key={goal.id} onClick={() => toggleMicroGoal(goal.id)}
+                  style={{ background: goal.completed ? `${theme.accent}15` : theme.subtle, border: `1px solid ${goal.completed ? theme.accent + '40' : 'transparent'}`, borderRadius: '12px', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s ease' }}>
+                  <div style={{ width: '22px', height: '22px', borderRadius: '6px', border: `2px solid ${goal.completed ? theme.accent : theme.text + '40'}`, background: goal.completed ? theme.accent : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}>
+                    {goal.completed && <span style={{ color: theme.bg, fontSize: '12px' }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize: '18px' }}>{goal.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '13px', color: theme.text, opacity: goal.completed ? 0.6 : 0.9, textDecoration: goal.completed ? 'line-through' : 'none', lineHeight: 1.4, display: 'block' }}>{goal.text}</span>
+                    {(goal.source || goal.why) && <span style={{ fontSize: '11px', color: theme.accent, opacity: 0.7 }}>{goal.source || goal.why}</span>}
+                  </div>
                 </div>
                 <span style={{ fontSize: '18px' }}>{goal.icon}</span>
                 <div style={{ flex: 1 }}>
@@ -871,8 +935,6 @@ Return ONLY a JSON array, no markdown:
   // ---- HistoryView ----
   const HistoryView = () => {
     const today = new Date();
-    const [calMonth, setCalMonth] = React.useState(today.getMonth());
-    const [calYear, setCalYear] = React.useState(today.getFullYear());
 
     const entryByDate = {};
     calendarEntries.forEach(e => {
@@ -893,6 +955,8 @@ Return ONLY a JSON array, no markdown:
 
     const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); };
     const nextMonth = () => { if (isCurrentMonth) return; if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); };
+
+    const textareaStyle = { width: '100%', padding: '12px', border: `1px solid ${theme.subtle}`, borderRadius: '10px', fontFamily: '"Fira Code", monospace', fontSize: '13px', lineHeight: 1.6, color: theme.text, background: theme.bg, resize: 'none', outline: 'none', boxSizing: 'border-box' };
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: '"Fira Code", monospace' }}>
@@ -919,11 +983,20 @@ Return ONLY a JSON array, no markdown:
               if (!day) return <div key={i} />;
               const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
               const entry = entryByDate[dateStr];
-              const isToday = dateStr === today.toISOString().split('T')[0];
-              const isFuture = new Date(dateStr + 'T12:00:00') > today;
+              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              const isToday = dateStr === todayStr;
+              const isFuture = dateStr > todayStr;
               const moodAccent = entry?.mood ? (themes[entry.mood] || theme).accent : theme.accent;
               return (
-                <button key={i} type="button" onClick={() => entry && setSelectedHistoryDay(entry)} disabled={!entry || isFuture}
+                <button key={i} type="button" onClick={() => {
+                  if (entry) {
+                    setSelectedHistoryDay(entry);
+                    setEditingHistory(false);
+                    setEditDreamText(entry.dream || '');
+                    setEditJournalText(entry.reflection || '');
+                    setTimeout(() => historyDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  }
+                }} disabled={!entry || isFuture}
                   style={{ aspectRatio: '1', borderRadius: '10px', border: isToday ? `2px solid ${theme.accent}` : `1px solid ${entry ? moodAccent + '40' : 'transparent'}`, background: entry ? `${moodAccent}30` : isFuture ? 'transparent' : theme.subtle, cursor: entry ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', transition: 'all 0.15s ease', padding: '2px' }}>
                   <span style={{ fontSize: '12px', color: entry ? theme.text : `${theme.text}${isFuture ? '20' : '40'}`, fontFamily: '"Fira Code", monospace', fontWeight: isToday ? 600 : 400 }}>{day}</span>
                   {entry && <span style={{ fontSize: '7px', lineHeight: 1 }}>{entry.dream ? '💭' : ''}{entry.reflection ? '🌙' : ''}</span>}
@@ -939,32 +1012,81 @@ Return ONLY a JSON array, no markdown:
         </div>
 
         {selectedHistoryDay && (
-          <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.accent}50`, animation: 'fadeIn 0.3s ease' }}>
+          <div ref={historyDetailRef} style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.accent}50`, animation: 'fadeIn 0.3s ease' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 500, color: theme.text, margin: 0 }}>{formatDate(selectedHistoryDay.date)}</h3>
               {selectedHistoryDay.mood && (
                 <span style={{ background: `${(themes[selectedHistoryDay.mood] || theme).accent}30`, color: (themes[selectedHistoryDay.mood] || theme).accent, padding: '6px 12px', borderRadius: '8px', fontSize: '12px' }}>{selectedHistoryDay.mood}</span>
               )}
             </div>
-            {selectedHistoryDay.dream && (
-              <div style={{ marginBottom: '18px' }}>
-                <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Dream</p>
-                <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{selectedHistoryDay.dream}</p>
-              </div>
+
+            {editingHistory ? (
+              <>
+                <div style={{ marginBottom: '18px' }}>
+                  <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Dream</p>
+                  <textarea value={editDreamText} onChange={e => setEditDreamText(e.target.value)} rows={3} placeholder="No dream recorded..." style={textareaStyle} />
+                </div>
+                <div style={{ marginBottom: '18px' }}>
+                  <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Reflection</p>
+                  <textarea value={editJournalText} onChange={e => setEditJournalText(e.target.value)} rows={4} placeholder="No reflection recorded..." style={textareaStyle} />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={handleHistoryEdit} disabled={editSaving}
+                    style={{ flex: 1, padding: '12px', background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color: theme.bg, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 500, cursor: editSaving ? 'not-allowed' : 'pointer', fontFamily: '"Fira Code", monospace', opacity: editSaving ? 0.7 : 1 }}>
+                    {editSaving ? 'Saving...' : 'Save changes'}
+                  </button>
+                  <button onClick={() => setEditingHistory(false)}
+                    style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {selectedHistoryDay.dream && (
+                  <div style={{ marginBottom: '18px' }}>
+                    <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Dream</p>
+                    <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{selectedHistoryDay.dream}</p>
+                  </div>
+                )}
+                {selectedHistoryDay.reflection && (
+                  <div style={{ marginBottom: '18px' }}>
+                    <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Reflection</p>
+                    <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{selectedHistoryDay.reflection}</p>
+                  </div>
+                )}
+                {selectedHistoryDay.notes && selectedHistoryDay.notes.length > 0 && (
+                  <div style={{ marginBottom: '18px' }}>
+                    <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Quick Notes</p>
+                    {selectedHistoryDay.notes.map((note, i) => (
+                      <p key={i} style={{ fontSize: '13px', color: theme.text, margin: '0 0 6px 0', lineHeight: 1.6, opacity: 0.75 }}>• {note}</p>
+                    ))}
+                  </div>
+                )}
+                {selectedHistoryDay.gratitude && (
+                  <div style={{ background: theme.subtle, borderRadius: '10px', padding: '14px', marginBottom: '18px' }}>
+                    <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>AI Insight</p>
+                    <p style={{ fontSize: '13px', color: theme.text, margin: 0, opacity: 0.8 }}>{selectedHistoryDay.gratitude}</p>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {user && selectedHistoryDay.dateString && (
+                    <button onClick={() => {
+                      setEditingHistory(true);
+                      setEditDreamText(selectedHistoryDay.dream || '');
+                      setEditJournalText(selectedHistoryDay.reflection || '');
+                    }}
+                      style={{ flex: 1, padding: '12px', background: theme.subtle, border: 'none', borderRadius: '10px', fontSize: '13px', color: theme.accent, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                      Edit
+                    </button>
+                  )}
+                  <button onClick={() => { setSelectedHistoryDay(null); setEditingHistory(false); }}
+                    style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', fontFamily: '"Fira Code", monospace' }}>
+                    Close
+                  </button>
+                </div>
+              </>
             )}
-            {selectedHistoryDay.reflection && (
-              <div style={{ marginBottom: '18px' }}>
-                <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Reflection</p>
-                <p style={{ fontSize: '13px', color: theme.text, margin: 0, lineHeight: 1.6, opacity: 0.85 }}>{selectedHistoryDay.reflection}</p>
-              </div>
-            )}
-            {selectedHistoryDay.gratitude && (
-              <div style={{ background: theme.subtle, borderRadius: '10px', padding: '14px' }}>
-                <p style={{ fontSize: '11px', color: theme.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>Insight</p>
-                <p style={{ fontSize: '13px', color: theme.text, margin: 0, opacity: 0.8 }}>{selectedHistoryDay.gratitude}</p>
-              </div>
-            )}
-            <button onClick={() => setSelectedHistoryDay(null)} style={{ marginTop: '18px', background: 'transparent', border: `1px solid ${theme.subtle}`, borderRadius: '10px', padding: '12px 20px', fontSize: '13px', color: theme.text, opacity: 0.7, cursor: 'pointer', width: '100%', fontFamily: '"Fira Code", monospace' }}>Close</button>
           </div>
         )}
       </div>
@@ -979,6 +1101,18 @@ Return ONLY a JSON array, no markdown:
     const topMoods = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(m => m[0]);
     const dreamsRemembered = recentEntries.filter(e => e.dream).length;
     const totalWords = recentEntries.reduce((acc, e) => acc + (e.dream?.split(' ').length || 0) + (e.reflection?.split(' ').length || 0), 0);
+
+    // Get real AI insights from recent entries
+    const weeklyInsight = (() => {
+      const entriesWithInsight = firestoreEntries.filter(e => e.aiResult?.insight).slice(0, 3);
+      if (entriesWithInsight.length > 0) {
+        return entriesWithInsight.map(e => e.aiResult.insight).join(' ');
+      }
+      if (topMoods[0]) {
+        return `You've been feeling most ${topMoods[0]} this week. Keep journaling to unlock deeper insights from Nocturne.`;
+      }
+      return 'Start journaling to see your weekly insights here.';
+    })();
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: '"Fira Code", monospace' }}>
@@ -1018,9 +1152,7 @@ Return ONLY a JSON array, no markdown:
             <span>✨</span> Weekly Insight
           </h3>
           <p style={{ fontSize: '14px', color: theme.text, margin: 0, lineHeight: 1.7, opacity: 0.85 }}>
-            {topMoods[0]
-              ? <>You've been feeling most <span style={{ color: theme.accent, fontWeight: 500 }}>{topMoods[0]}</span> this week. Your dreams have featured themes of exploration and freedom. Consider: what new territory are you ready to explore?</>
-              : 'Start journaling to see your weekly insights here.'}
+            {weeklyInsight}
           </p>
         </div>
 
@@ -1056,10 +1188,10 @@ Return ONLY a JSON array, no markdown:
       <DemoToggle />
 
       <div style={{ maxWidth: '480px', margin: '0 auto', padding: '20px 20px 120px 20px' }}>
-        {currentView === 'home' && <HomeView />}
-        {currentView === 'goals' && <GoalsView />}
-        {currentView === 'history' && <HistoryView />}
-        {currentView === 'wrapped' && <WrappedView />}
+        {currentView === 'home' && HomeView()}
+        {currentView === 'goals' && GoalsView()}
+        {currentView === 'history' && HistoryView()}
+        {currentView === 'wrapped' && WrappedView()}
       </div>
 
       <NavBar />

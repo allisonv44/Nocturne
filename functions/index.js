@@ -12,6 +12,21 @@ const geminiKey = defineSecret('GEMINI_API_KEY');
 
 const getGeminiKey = () => geminiKey.value();
 
+// Robust JSON parser — handles markdown-wrapped or thinking-prefixed responses
+function parseGeminiJSON(rawText) {
+  let text = rawText.trim();
+  // Strip markdown code fences if present
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+  // Try parsing directly first
+  try { return JSON.parse(text); } catch (_) {}
+  // Try extracting the first JSON object
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) return JSON.parse(match[0]);
+  throw new Error('Could not parse Gemini response as JSON: ' + text.slice(0, 200));
+}
+
 // ============================================================
 // FUNCTION 1: generateGoalFromDream
 // Called when user submits their morning dream entry
@@ -23,13 +38,30 @@ exports.generateGoalFromDream = onRequest(
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { dreamText, userId, entryId } = req.body;
+    const { dreamText, userId, entryId, refreshGoals, quickNotes } = req.body;
 
     if (!dreamText || !userId) {
       return res.status(400).json({ error: 'dreamText and userId are required' });
     }
 
     try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // 0. If refreshing, delete existing AI goals for today
+      if (refreshGoals) {
+        const existingGoals = await db
+          .collection('users').doc(userId)
+          .collection('goals')
+          .where('source', '==', 'ai')
+          .where('dateString', '==', today)
+          .get();
+        if (!existingGoals.empty) {
+          const deleteBatch = db.batch();
+          existingGoals.docs.forEach(d => deleteBatch.delete(d.ref));
+          await deleteBatch.commit();
+        }
+      }
+
       // 1. Fetch last 7 evening journal entries as context
       const journalsSnap = await db
         .collection('users').doc(userId)
@@ -44,20 +76,34 @@ exports.generateGoalFromDream = onRequest(
         return `Date: ${d.dateString}\nEntry: ${d.text}\nMood: ${d.mood || 'unspecified'}`;
       }).join('\n\n---\n\n');
 
+      // 1b. Fetch today's quick notes if not provided
+      let notesContext = quickNotes || '';
+      if (!notesContext) {
+        const notesSnap = await db
+          .collection('users').doc(userId)
+          .collection('entries')
+          .where('type', '==', 'note')
+          .where('dateString', '==', today)
+          .get();
+        notesContext = notesSnap.docs.map(d => d.data().text).join('\n');
+      }
+
       // 2. Call Gemini
       const genAI = new GoogleGenerativeAI(getGeminiKey());
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.8,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
         },
       });
 
-      const prompt = buildDreamPrompt(dreamText, journalHistory);
+      const prompt = buildDreamPrompt(dreamText, journalHistory, notesContext);
       const result = await model.generateContent(prompt);
-      const parsed = JSON.parse(result.response.text());
+      const rawText = result.response.text();
+      console.log('Gemini raw response (dream):', rawText.slice(0, 500));
+      const parsed = parseGeminiJSON(rawText);
 
       // 3. Save AI result back to the dream entry
       if (entryId) {
@@ -73,7 +119,6 @@ exports.generateGoalFromDream = onRequest(
 
       // 4. Batch-save goals to user's goals subcollection
       if (parsed.goals && Array.isArray(parsed.goals)) {
-        const today = new Date().toISOString().split('T')[0];
         const batch = db.batch();
         parsed.goals.forEach(goal => {
           const goalRef = db
@@ -149,20 +194,31 @@ exports.processJournalEntry = onRequest(
         return `Date: ${d.dateString}\nEntry: ${d.text}`;
       }).join('\n\n---\n\n');
 
+      // 2b. Fetch today's quick notes
+      const notesSnap = await db
+        .collection('users').doc(userId)
+        .collection('entries')
+        .where('type', '==', 'note')
+        .where('dateString', '==', dateString)
+        .get();
+      const todayNotes = notesSnap.docs.map(d => d.data().text).join('\n');
+
       // 3. Call Gemini
       const genAI = new GoogleGenerativeAI(getGeminiKey());
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.75,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
         },
       });
 
-      const prompt = buildJournalPrompt(journalText, todayDream, recentJournals);
+      const prompt = buildJournalPrompt(journalText, todayDream, recentJournals, todayNotes);
       const result = await model.generateContent(prompt);
-      const parsed = JSON.parse(result.response.text());
+      const rawText = result.response.text();
+      console.log('Gemini raw response (journal):', rawText.slice(0, 500));
+      const parsed = parseGeminiJSON(rawText);
 
       // 4. Update the journal entry with AI result
       if (entryId) {
@@ -189,13 +245,16 @@ exports.processJournalEntry = onRequest(
 // PROMPT BUILDERS
 // ============================================================
 
-function buildDreamPrompt(dreamText, journalHistory) {
+function buildDreamPrompt(dreamText, journalHistory, quickNotes) {
   return `You are Nocturne, a compassionate and insightful journal companion. Your tone is warm, curious, and never prescriptive. You help people discover patterns in their inner life.
 
-The user has just recorded their morning dream. You also have access to their recent evening journal entries for context.
+The user has just recorded their morning dream. You also have access to their recent evening journal entries and any quick notes they jotted down today.
 
 RECENT JOURNAL ENTRIES (last 7 evenings):
 ${journalHistory || 'No previous entries yet — this is the first entry.'}
+
+QUICK NOTES FROM TODAY:
+${quickNotes || 'None'}
 
 TODAY'S DREAM:
 ${dreamText}
@@ -217,13 +276,16 @@ Based on the dream and their journaling history, return a JSON object. Return ON
 Generate exactly 3 goals. Make them specific to THIS person's content, not generic advice.`;
 }
 
-function buildJournalPrompt(journalText, todayDream, recentJournals) {
+function buildJournalPrompt(journalText, todayDream, recentJournals, quickNotes) {
   return `You are Nocturne, a compassionate and insightful journal companion. Your tone is warm, curious, and never prescriptive.
 
-The user has just written their evening journal entry. You have their dream from this morning and recent past journal entries as context.
+The user has just written their evening journal entry. You have their dream from this morning, any quick notes they captured during the day, and recent past journal entries as context.
 
 TODAY'S DREAM (recorded this morning):
 ${todayDream || 'No dream recorded today.'}
+
+QUICK NOTES FROM TODAY:
+${quickNotes || 'None'}
 
 RECENT PAST JOURNAL ENTRIES:
 ${recentJournals || 'No previous entries yet — this is the first entry.'}

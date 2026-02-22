@@ -3,10 +3,14 @@ const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+const { getFirestore } = require('firebase-admin/firestore');
+
 admin.initializeApp();
-const db = admin.firestore();
+const db = getFirestore('nocturne');
 
 const geminiKey = defineSecret('GEMINI_API_KEY');
+
+const getGeminiKey = () => geminiKey.value();
 
 // ============================================================
 // FUNCTION 1: generateGoalFromDream
@@ -41,7 +45,7 @@ exports.generateGoalFromDream = onRequest(
       }).join('\n\n---\n\n');
 
       // 2. Call Gemini
-      const genAI = new GoogleGenerativeAI(geminiKey.value());
+      const genAI = new GoogleGenerativeAI(getGeminiKey());
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
         generationConfig: {
@@ -146,7 +150,7 @@ exports.processJournalEntry = onRequest(
       }).join('\n\n---\n\n');
 
       // 3. Call Gemini
-      const genAI = new GoogleGenerativeAI(geminiKey.value());
+      const genAI = new GoogleGenerativeAI(getGeminiKey());
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
         generationConfig: {

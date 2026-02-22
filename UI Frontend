@@ -719,11 +719,70 @@ const DaylightJournal = () => {
     );
   };
 
+  // ---- AI-powered goal refresh ----
+  const refreshMicroGoalsWithAI = useCallback(async () => {
+    setGeneratingGoals(true);
+    try {
+      // Build context from whatever the user has written today
+      const today = new Date().toISOString().split('T')[0];
+      const contextDream = dreamText || firestoreEntries.find(e => e.type === 'dream' && e.dateString === today)?.text || '';
+      const contextJournal = eveningText || firestoreEntries.find(e => e.type === 'journal' && e.dateString === today)?.text || '';
+      const recentEntries = firestoreEntries.slice(0, 5).map(e => `${e.type}: ${e.text}`).join('\n');
+
+      const prompt = `You are Nocturne, a compassionate journal companion. Based on this user's recent journal context, generate 3 specific, actionable micro-goals for today.
+
+Today's dream: ${contextDream || 'Not recorded yet'}
+Today's journal: ${contextJournal || 'Not recorded yet'}
+Recent entries: ${recentEntries || 'No entries yet'}
+
+Return ONLY a JSON array, no markdown:
+[
+  { "text": "A specific gentle action (15 words max)", "icon": "single emoji", "source": "brief reason connecting to their entries (10 words max)" },
+  { "text": "...", "icon": "...", "source": "..." },
+  { "text": "...", "icon": "...", "source": "..." }
+]`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 512,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+
+      if (!response.ok) throw new Error('AI request failed');
+      const data = await response.json();
+      const text = data.content?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const goals = JSON.parse(clean);
+
+      if (Array.isArray(goals) && goals.length > 0) {
+        setAiMicroGoals(goals.map((g, i) => ({
+          id: Date.now() + i,
+          text: g.text,
+          icon: g.icon || '✨',
+          source: g.source || '',
+          completed: false,
+        })));
+      } else {
+        // Fall back to mood-based if AI returns unexpected format
+        generateNewMicroGoals();
+      }
+    } catch (err) {
+      console.error('AI goal refresh error:', err);
+      // Graceful fallback to mood-based goals
+      generateNewMicroGoals();
+    } finally {
+      setGeneratingGoals(false);
+    }
+  }, [dreamText, eveningText, firestoreEntries, generateNewMicroGoals]);
+
   // ---- GoalsView ----
   const GoalsView = () => {
     const refreshMicroGoals = () => {
-      setGeneratingGoals(true);
-      setTimeout(() => { generateNewMicroGoals(); setGeneratingGoals(false); }, 800);
+      refreshMicroGoalsWithAI();
     };
     const completedCount = [...aiMicroGoals, ...userGoals].filter(g => g.completed).length;
     const totalCount = aiMicroGoals.length + userGoals.length;

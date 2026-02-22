@@ -1,0 +1,31 @@
+Nocturne Dream App Design Doc
+
+
+Let’s combine your ideas cleanly:  “First Light AI” An AI-powered dream + inspiration + micro-goal tracker. 
+Core Flow: Morning check-in (dream or mood) 
+AI generates: 3 keywords 1 reflection sentence 1 micro-goal 
+User marks goal complete 
+App tracks emotional + goal patterns 
+
+That’s enough for a strong demo.
+
+
+Extra features:
+Level up system with some sort of progression tracking (maybe streaks?)
+Includes achievements ofc
+Colors that dynamically change in the background depending on mood (suppose LLM would scan them and think of colors?)
+Badges based on goals (Gemini image creation)
+
+
+
+SPEC SHEET:
+
+
+User authenticates with Firebase Auth
+User enters dream in text box
+Text box goes -> Firestore DB
+MAKE THIS INTO JSON
+Pipe JSON -> Cloud Function
+Cloud Function -> AI call
+AI ‘does stuff’, reports back
+

@@ -1,0 +1,753 @@
+import React, { useState, useMemo, useRef } from 'react';
+
+// ─── AUTH SCREEN ──────────────────────────────────────────────────────────────
+const AuthScreen = ({ onAuth }) => {
+  const [mode, setMode] = useState('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = () => {
+    setError('');
+    if (!email || !password) { setError('Please fill in all fields.'); return; }
+    if (mode === 'signup' && !name) { setError('Please enter your name.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      onAuth({ name: name || email.split('@')[0], email });
+    }, 900);
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#0e1117',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      fontFamily: '"Fira Code", monospace',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin   { to { transform:rotate(360deg); } }
+        .auth-input:focus { border-color: #6aadcf !important; }
+        .auth-input::placeholder { color: rgba(208,220,229,0.25); }
+        .tab-btn:hover { opacity: 1 !important; }
+        .submit-btn:hover:not(:disabled) { opacity:0.92 !important; transform:translateY(-1px); }
+        .submit-btn:active { transform:translateY(0); }
+      `}</style>
+
+      <div style={{ width: '100%', maxWidth: '400px', animation: 'fadeUp 0.6s ease both' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'linear-gradient(135deg, #6aadcf 0%, #6aadcf88 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px', fontSize: '24px',
+          }}>◐</div>
+          <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#d0dce5', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>daylight</h1>
+          <p style={{ fontSize: '12px', color: '#d0dce5', opacity: 0.4, margin: 0 }}>your daily journal</p>
+        </div>
+
+        {/* Card */}
+        <div style={{
+          background: '#1e2736', borderRadius: '20px', padding: '32px',
+          border: '1px solid #1a2230', boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+        }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', background: '#12161c', borderRadius: '12px', padding: '4px', marginBottom: '28px' }}>
+            {['login', 'signup'].map(m => (
+              <button key={m} className="tab-btn" onClick={() => { setMode(m); setError(''); }} style={{
+                flex: 1, padding: '10px', borderRadius: '9px', border: 'none',
+                background: mode === m ? '#1e2736' : 'transparent',
+                color: mode === m ? '#6aadcf' : '#d0dce5',
+                opacity: mode === m ? 1 : 0.45,
+                fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                fontFamily: '"Fira Code", monospace',
+                boxShadow: mode === m ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                transition: 'all 0.2s ease',
+              }}>
+                {m === 'login' ? 'Sign In' : 'Sign Up'}
+              </button>
+            ))}
+          </div>
+
+          {/* Fields */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {mode === 'signup' && (
+              <div>
+                <label style={{ fontSize: '11px', color: '#d0dce5', opacity: 0.5, display: 'block', marginBottom: '8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Name</label>
+                <input className="auth-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={{ width: '100%', padding: '14px 16px', background: '#12161c', border: '1px solid #1a2230', borderRadius: '12px', color: '#d0dce5', fontSize: '14px', fontFamily: '"Fira Code", monospace', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s ease' }} />
+              </div>
+            )}
+            <div>
+              <label style={{ fontSize: '11px', color: '#d0dce5', opacity: 0.5, display: 'block', marginBottom: '8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Email</label>
+              <input className="auth-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={{ width: '100%', padding: '14px 16px', background: '#12161c', border: '1px solid #1a2230', borderRadius: '12px', color: '#d0dce5', fontSize: '14px', fontFamily: '"Fira Code", monospace', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s ease' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: '#d0dce5', opacity: 0.5, display: 'block', marginBottom: '8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Password</label>
+              <input className="auth-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '14px 16px', background: '#12161c', border: '1px solid #1a2230', borderRadius: '12px', color: '#d0dce5', fontSize: '14px', fontFamily: '"Fira Code", monospace', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s ease' }} />
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(207,100,100,0.12)', border: '1px solid rgba(207,100,100,0.3)', borderRadius: '10px', fontSize: '13px', color: '#cf8a8a' }}>
+              {error}
+            </div>
+          )}
+
+          <button className="submit-btn" onClick={handleSubmit} disabled={loading} style={{
+            marginTop: '24px', width: '100%', padding: '16px',
+            background: loading ? '#1a2230' : 'linear-gradient(135deg, #6aadcf 0%, #6aadcfcc 100%)',
+            color: loading ? '#d0dce580' : '#0e1117',
+            border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 600,
+            cursor: loading ? 'default' : 'pointer', fontFamily: '"Fira Code", monospace',
+            transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+          }}>
+            {loading ? (
+              <>
+                <span style={{ width: '16px', height: '16px', border: '2px solid #d0dce530', borderTopColor: '#6aadcf', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                {mode === 'login' ? 'Signing in…' : 'Creating account…'}
+              </>
+            ) : (
+              mode === 'login' ? 'Sign In →' : 'Create Account →'
+            )}
+          </button>
+
+          {mode === 'login' && (
+            <p style={{ textAlign: 'center', marginTop: '18px', fontSize: '12px', color: '#d0dce5', opacity: 0.35 }}>
+              Forgot your password?
+            </p>
+          )}
+        </div>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '11px', color: '#d0dce5', opacity: 0.25 }}>
+          Your journal is private and encrypted.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+const DaylightJournal = () => {
+  const [user, setUser] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [currentView, setCurrentView] = useState('home');
+  const [demoTime, setDemoTime] = useState('morning');
+  const [demoDay, setDemoDay] = useState(0);
+  const [selectedHistoryDay, setSelectedHistoryDay] = useState(null);
+  const [quickNote, setQuickNote] = useState('');
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [dreamSubmitted, setDreamSubmitted] = useState(false);
+  const [eveningSubmitted, setEveningSubmitted] = useState(false);
+  const dreamRef = useRef(null);
+  const eveningRef = useRef(null);
+  const [dreamText, setDreamText] = useState('');
+  const [eveningText, setEveningText] = useState('');
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const [userGoals, setUserGoals] = useState([]);
+  const [newGoalText, setNewGoalText] = useState('');
+  const [aiMicroGoals, setAiMicroGoals] = useState([
+    { id: 1, text: "Take 3 deep breaths before your first meeting", completed: false, icon: '🧘' },
+    { id: 2, text: "Write down one thing you're looking forward to", completed: false, icon: '✏️' },
+    { id: 3, text: "Step outside for 5 minutes of fresh air", completed: false, icon: '🌿' },
+  ]);
+  const [generatingGoals, setGeneratingGoals] = useState(false);
+
+  const demoDays = [
+    { mood: 'peaceful',   dream: 'I was walking through a quiet forest, the trees were glowing softly.',  reflection: 'Today felt balanced. Had a good conversation with mom.' },
+    { mood: 'energetic',  dream: 'Running through city streets, everything was fast and exciting.',         reflection: 'So much energy today! Finished the project ahead of schedule.' },
+    { mood: 'reflective', dream: 'Sitting by an ocean, waves bringing old memories.',                       reflection: 'Thought a lot about where I want to be next year.' },
+    { mood: 'creative',   dream: 'Building impossible structures that kept changing shape.',                 reflection: 'Ideas flowing all day. Started three new projects.' },
+    { mood: 'grateful',   dream: 'A gathering of friends, everyone was laughing.',                          reflection: 'Feeling so thankful for the people in my life.' },
+    { mood: 'calm',       dream: 'Floating in warm water under stars.',                                     reflection: 'Quiet day. Sometimes stillness is what we need.' },
+  ];
+  const currentDemoDay = demoDays[demoDay % demoDays.length];
+
+  const moodGoalSets = {
+    peaceful:   [{ text:'Find a quiet spot and sit for 5 minutes', icon:'🧘', source:'You felt calm yesterday' }, { text:'Write down what peace means to you today', icon:'✏️', source:'From your reflection' }, { text:'Take a slow walk without your phone', icon:'🚶', source:'Based on your dream themes' }],
+    energetic:  [{ text:'Channel your energy into a quick workout', icon:'💪', source:'Matching your vibe' }, { text:"Start that project you've been putting off", icon:'🚀', source:'You mentioned feeling motivated' }, { text:'Dance to your favorite song', icon:'💃', source:'Based on your mood' }],
+    reflective: [{ text:'Write a letter to your future self', icon:'💌', source:"You've been introspective" }, { text:'Look through old photos for 10 minutes', icon:'📸', source:'From your dream about memories' }, { text:'Journal about a turning point', icon:'📖', source:'Based on your reflections' }],
+    creative:   [{ text:'Sketch something without lifting your pen', icon:'✏️', source:'Your creative energy is high' }, { text:'Write 100 words of fiction', icon:'📝', source:'From your lighthouse keeper idea' }, { text:'Take a photo from an unusual angle', icon:'📷', source:'Based on your dreams' }],
+    grateful:   [{ text:'Send a thank you message to someone', icon:'💬', source:'You mentioned feeling thankful' }, { text:'Write 3 things you appreciate about yourself', icon:'💝', source:'From your gratitude patterns' }, { text:'Do something kind for a stranger', icon:'🌟', source:'Based on your reflections' }],
+    calm:       [{ text:'Make a cup of tea and drink it slowly', icon:'🍵', source:'Matching your peaceful mood' }, { text:'Listen to ambient sounds for 5 minutes', icon:'🎧', source:'From your dream imagery' }, { text:'Declutter one small space', icon:'✨', source:'Based on your calm state' }],
+  };
+
+  const generateNewMicroGoals = () => {
+    const goals = moodGoalSets[currentDemoDay.mood] || moodGoalSets.peaceful;
+    setAiMicroGoals(goals.map((g, i) => ({ ...g, id: Date.now() + i, completed: false })));
+  };
+
+  const nextDemoDay = () => {
+    setDemoDay(d => d + 1);
+    setDreamSubmitted(false); setEveningSubmitted(false);
+    setDreamText(''); setEveningText('');
+    setShowAISuggestions(false); setAiSuggestions(null); setSelectedGoal(null);
+    generateNewMicroGoals();
+  };
+
+  const generateAISuggestions = () => {
+    setAiLoading(true);
+    setTimeout(() => {
+      setAiSuggestions({
+        insight: "I noticed you've been dreaming about open spaces and freedom lately, and your reflections mention feeling most alive during creative moments. There's a pattern of seeking expansion.",
+        goals: [
+          { icon:'✏️', title:'Write for 10 minutes',      description:'You mentioned a lighthouse keeper story idea 3 days ago. Spend 10 minutes expanding it.',                   why:'Based on your note from Tuesday' },
+          { icon:'🧘', title:'Morning walk without phone', description:'Your dreams have featured open landscapes. Try a 15-minute walk, just observing.',                         why:'Based on recurring dream themes' },
+          { icon:'💬', title:'Reach out to someone',       description:"You felt energized after talking with Sarah. Send a quick message to someone you've been thinking about.", why:'Based on your reflection from yesterday' },
+          { icon:'🔍', title:'Try something new',          description:"Visit a place in your city you've never been, even just for 20 minutes.",                                   why:'Based on your gratitude patterns' },
+        ],
+        reflection_prompts: [
+          "What would your dream-self from last night want you to do today?",
+          "You mentioned feeling 'peaceful' often this week. What creates that feeling?",
+          "If you could give yourself permission to do one thing today, what would it be?",
+        ],
+      });
+      setAiLoading(false);
+    }, 1500);
+  };
+
+  const [entries] = useState([
+    { date: new Date(Date.now()-29*86400000), mood:'peaceful',   dream:'Flying over mountains made of glass',        reflection:'Had a wonderful conversation that made me think differently.', gratitude:'Good health' },
+    { date: new Date(Date.now()-28*86400000), mood:'energetic',  dream:'Swimming with luminescent fish',              reflection:"Quiet day, but peaceful. Sometimes that's exactly what I need.", gratitude:'Supportive friends' },
+    { date: new Date(Date.now()-27*86400000), mood:'reflective', dream:null,                                          reflection:'Pushed through something difficult. Proud of myself.',            gratitude:'Creative time' },
+    { date: new Date(Date.now()-26*86400000), mood:'grateful',   dream:'A library where books whispered secrets',     reflection:'Noticed the small things today - sunlight, good coffee.',         gratitude:'Nature' },
+    { date: new Date(Date.now()-25*86400000), empty:true },
+    { date: new Date(Date.now()-24*86400000), mood:'creative',   dream:'Walking through a forest of giant flowers',   reflection:'Creative energy was flowing. Made progress on my project.',       gratitude:'Music' },
+    { date: new Date(Date.now()-23*86400000), mood:'calm',       dream:'Meeting an old friend in a strange city',     reflection:'Felt connected to the people around me.',                         gratitude:'Good health' },
+    { date: new Date(Date.now()-22*86400000), mood:'inspired',   dream:'Building something impossible',               reflection:'Took time to rest without guilt.',                                gratitude:'Supportive friends' },
+    { date: new Date(Date.now()-21*86400000), mood:'cozy',       dream:'A warm kitchen filled with familiar smells',  reflection:'Learned something new that excited me.',                          gratitude:'Creative time' },
+    { date: new Date(Date.now()-20*86400000), mood:'peaceful',   dream:null,                                          reflection:'Had a wonderful conversation that made me think differently.',    gratitude:'Nature' },
+    { date: new Date(Date.now()-19*86400000), empty:true },
+    { date: new Date(Date.now()-18*86400000), mood:'energetic',  dream:'Flying over mountains made of glass',         reflection:'Quiet day, but peaceful.',                                        gratitude:'Music' },
+    { date: new Date(Date.now()-17*86400000), mood:'reflective', dream:'Swimming with luminescent fish',              reflection:'Pushed through something difficult.',                             gratitude:'Good health' },
+    { date: new Date(Date.now()-16*86400000), mood:'grateful',   dream:'A library where books whispered secrets',     reflection:'Noticed the small things today.',                                 gratitude:'Supportive friends' },
+    { date: new Date(Date.now()-15*86400000), mood:'creative',   dream:null,                                          reflection:'Creative energy was flowing.',                                    gratitude:'Creative time' },
+    { date: new Date(Date.now()-14*86400000), mood:'calm',       dream:'Walking through a forest of giant flowers',   reflection:'Felt connected to the people around me.',                         gratitude:'Nature' },
+    { date: new Date(Date.now()-13*86400000), empty:true },
+    { date: new Date(Date.now()-12*86400000), mood:'inspired',   dream:'Meeting an old friend in a strange city',     reflection:'Took time to rest without guilt.',                                gratitude:'Music' },
+    { date: new Date(Date.now()-11*86400000), mood:'cozy',       dream:'Building something impossible',               reflection:'Learned something new that excited me.',                          gratitude:'Good health' },
+    { date: new Date(Date.now()-10*86400000), mood:'peaceful',   dream:'A warm kitchen filled with familiar smells',  reflection:'Had a wonderful conversation.',                                   gratitude:'Supportive friends' },
+    { date: new Date(Date.now()- 9*86400000), mood:'energetic',  dream:null,                                          reflection:'Quiet day, but peaceful.',                                        gratitude:'Creative time' },
+    { date: new Date(Date.now()- 8*86400000), mood:'reflective', dream:'Flying over mountains made of glass',         reflection:'Pushed through something difficult.',                             gratitude:'Nature' },
+    { date: new Date(Date.now()- 7*86400000), empty:true },
+    { date: new Date(Date.now()- 6*86400000), mood:'grateful',   dream:'Swimming with luminescent fish',              reflection:'Noticed the small things today.',                                 gratitude:'Music' },
+    { date: new Date(Date.now()- 5*86400000), mood:'creative',   dream:'A library where books whispered secrets',     reflection:'Creative energy was flowing.',                                    gratitude:'Good health' },
+    { date: new Date(Date.now()- 4*86400000), mood:'calm',       dream:null,                                          reflection:'Felt connected to the people around me.',                         gratitude:'Supportive friends' },
+    { date: new Date(Date.now()- 3*86400000), mood:'inspired',   dream:'Walking through a forest of giant flowers',   reflection:'Took time to rest without guilt.',                                gratitude:'Creative time' },
+    { date: new Date(Date.now()- 2*86400000), mood:'cozy',       dream:'Meeting an old friend in a strange city',     reflection:'Learned something new that excited me.',                          gratitude:'Nature' },
+    { date: new Date(Date.now()- 1*86400000), mood:'peaceful',   dream:'Building something impossible',               reflection:'Had a wonderful conversation.',                                   gratitude:'Music' },
+    { date: new Date(),                        mood:'grateful',   dream:'A warm kitchen filled with familiar smells',  reflection:'Today was a good day.',                                           gratitude:'Good health' },
+  ]);
+
+  const themes = {
+    peaceful:   { bg:'#12161c', accent:'#6aadcf', text:'#d0dce5', subtle:'#1a2230', card:'#1e2736' },
+    energetic:  { bg:'#1c1412', accent:'#cf8a6a', text:'#e5d8d0', subtle:'#2a1e1a', card:'#362820' },
+    reflective: { bg:'#18141c', accent:'#a68acf', text:'#ddd0e5', subtle:'#241a2a', card:'#2e2236' },
+    grateful:   { bg:'#121c16', accent:'#6acf8a', text:'#d0e5d8', subtle:'#1a2a1e', card:'#203628' },
+    creative:   { bg:'#1c1a12', accent:'#cfba6a', text:'#e5e0d0', subtle:'#2a281a', card:'#363220' },
+    calm:       { bg:'#141c18', accent:'#6acfba', text:'#d0e5e0', subtle:'#1a2a26', card:'#203630' },
+    inspired:   { bg:'#1a1418', accent:'#cf6aa6', text:'#e5d0dd', subtle:'#2a1a24', card:'#36202e' },
+    cozy:       { bg:'#1a1814', accent:'#cfaa6a', text:'#e5ddd0', subtle:'#2a2620', card:'#363020' },
+  };
+  const theme = themes[currentDemoDay.mood] || themes.peaceful;
+  const streak = entries.filter(e => !e.empty).length;
+
+  const formatDate = (date) => {
+    const today = new Date(), yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  };
+
+  if (!user) return <AuthScreen onAuth={u => setUser(u)} />;
+
+  // ── SHARED COMPONENTS ──────────────────────────────────────────────────────
+  const NavBar = () => (
+    <nav style={{
+      position:'fixed', bottom:0, left:0, right:0,
+      background:`linear-gradient(to top, ${theme.bg} 0%, ${theme.bg}dd 100%)`,
+      borderTop:`1px solid ${theme.subtle}`,
+      padding:'14px 0 30px 0',
+      display:'flex', justifyContent:'space-around',
+      backdropFilter:'blur(20px)', zIndex:100,
+    }}>
+      {[
+        { id:'home',    icon:'◐', label:'today' },
+        { id:'goals',   icon:'◎', label:'goals' },
+        { id:'history', icon:'◫', label:'history' },
+        { id:'wrapped', icon:'✦', label:'wrapped' },
+        { id:'account', icon:'○', label:'account' },
+      ].map(item => (
+        <button key={item.id} onClick={() => { setCurrentView(item.id); setSelectedHistoryDay(null); }} style={{
+          background: currentView === item.id ? theme.card : 'transparent',
+          border:'none', cursor:'pointer', display:'flex', flexDirection:'column',
+          alignItems:'center', gap:'6px',
+          opacity: currentView === item.id ? 1 : 0.5,
+          transition:'all 0.3s ease', padding:'10px 14px', borderRadius:'12px',
+        }}>
+          <span style={{ fontSize:'18px', color: currentView === item.id ? theme.accent : theme.text }}>{item.icon}</span>
+          <span style={{ fontFamily:'"Fira Code", monospace', fontSize:'10px', color:theme.text, letterSpacing:'0.02em' }}>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+
+  const DemoToggle = () => (
+    <div style={{
+      position:'fixed', top:'16px', left:'50%', transform:'translateX(-50%)',
+      background:theme.card, border:`1px solid ${theme.subtle}`, borderRadius:'12px',
+      padding:'6px', display:'flex', gap:'6px', zIndex:200, fontFamily:'"Fira Code", monospace',
+    }}>
+      <button onClick={nextDemoDay} style={{ background:`linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`, color:theme.bg, border:'none', borderRadius:'8px', padding:'8px 14px', fontSize:'11px', fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px' }}>
+        <span>↻</span> New Day
+      </button>
+      <div style={{ display:'flex', gap:'2px', background:theme.subtle, borderRadius:'8px', padding:'2px' }}>
+        {['morning','afternoon','evening'].map(t => (
+          <button key={t} onClick={() => setDemoTime(t)} style={{ background:demoTime===t ? theme.card : 'transparent', color:demoTime===t ? theme.accent : theme.text, border:'none', borderRadius:'6px', padding:'6px 10px', fontSize:'11px', cursor:'pointer', opacity:demoTime===t ? 1 : 0.5, transition:'all 0.2s ease' }}>
+            {t==='morning' ? '☀️' : t==='afternoon' ? '🌤' : '🌙'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const Chip = ({ text, onClick }) => (
+    <button onClick={onClick} style={{ background:theme.card, border:`1px solid ${theme.subtle}`, borderRadius:'8px', padding:'10px 14px', fontFamily:'"Fira Code", monospace', fontSize:'12px', color:theme.text, opacity:0.8, cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s ease' }}
+      onMouseEnter={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.borderColor=theme.accent; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity='0.8'; e.currentTarget.style.borderColor=theme.subtle; }}>
+      {text}
+    </button>
+  );
+
+  // ── ACCOUNT VIEW ───────────────────────────────────────────────────────────
+  const AccountView = () => (
+    <div style={{ display:'flex', flexDirection:'column', gap:'20px', fontFamily:'"Fira Code", monospace' }}>
+      <div style={{ paddingTop:'60px', textAlign:'center' }}>
+        <div style={{ width:'72px', height:'72px', borderRadius:'50%', background:`linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}66 100%)`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:'28px', fontWeight:600, color:'#0e1117' }}>
+          {user.name[0].toUpperCase()}
+        </div>
+        <h1 style={{ fontSize:'20px', fontWeight:500, color:theme.text, margin:'0 0 4px 0' }}>{user.name}</h1>
+        <p style={{ fontSize:'12px', color:theme.text, opacity:0.4, margin:0 }}>{user.email}</p>
+      </div>
+
+      {/* Stats */}
+      <div style={{ background:theme.card, borderRadius:'16px', padding:'20px', border:`1px solid ${theme.subtle}`, display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
+        {[
+          { label:'Entries', value:entries.filter(e=>!e.empty).length },
+          { label:'Streak',  value:streak },
+          { label:'Weeks',   value:Math.ceil(entries.length/7) },
+        ].map((s,i) => (
+          <div key={i} style={{ textAlign:'center', padding:'8px', borderRight:i<2?`1px solid ${theme.subtle}`:'none' }}>
+            <p style={{ fontSize:'24px', fontWeight:600, color:theme.accent, margin:'0 0 4px 0' }}>{s.value}</p>
+            <p style={{ fontSize:'11px', color:theme.text, opacity:0.5, margin:0, textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Settings list */}
+      <div style={{ background:theme.card, borderRadius:'16px', border:`1px solid ${theme.subtle}`, overflow:'hidden' }}>
+        {[
+          { icon:'🔔', label:'Notifications', sub:'Daily reminders' },
+          { icon:'🔒', label:'Privacy',        sub:'Manage your data' },
+          { icon:'🎨', label:'Appearance',     sub:'Theme & display' },
+          { icon:'📤', label:'Export Journal', sub:'Download your entries' },
+        ].map((item, i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:'14px', padding:'16px 20px', borderBottom:i<3?`1px solid ${theme.subtle}`:'none', cursor:'pointer' }}
+            onMouseEnter={e => e.currentTarget.style.background=theme.subtle}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            <span style={{ fontSize:'20px' }}>{item.icon}</span>
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:'14px', color:theme.text, margin:'0 0 2px 0', opacity:0.9 }}>{item.label}</p>
+              <p style={{ fontSize:'11px', color:theme.text, opacity:0.4, margin:0 }}>{item.sub}</p>
+            </div>
+            <span style={{ color:theme.text, opacity:0.3, fontSize:'18px' }}>›</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Sign out */}
+      {!showSignOutConfirm ? (
+        <button onClick={() => setShowSignOutConfirm(true)} style={{ background:'transparent', border:'1px solid rgba(207,100,100,0.3)', borderRadius:'14px', padding:'18px', width:'100%', fontSize:'14px', fontWeight:500, color:'#cf8a8a', cursor:'pointer', fontFamily:'"Fira Code", monospace', display:'flex', alignItems:'center', justifyContent:'center', gap:'10px', transition:'all 0.2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(207,100,100,0.08)'}
+          onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+          <span>↩</span> Sign Out
+        </button>
+      ) : (
+        <div style={{ background:'rgba(207,100,100,0.08)', border:'1px solid rgba(207,100,100,0.25)', borderRadius:'14px', padding:'20px', textAlign:'center' }}>
+          <p style={{ fontSize:'14px', color:theme.text, margin:'0 0 16px 0', opacity:0.9 }}>Sign out of daylight?</p>
+          <div style={{ display:'flex', gap:'10px' }}>
+            <button onClick={() => setShowSignOutConfirm(false)} style={{ flex:1, padding:'14px', background:theme.card, border:`1px solid ${theme.subtle}`, borderRadius:'10px', fontSize:'13px', color:theme.text, cursor:'pointer', fontFamily:'"Fira Code", monospace', opacity:0.8 }}>Cancel</button>
+            <button onClick={() => { setUser(null); setShowSignOutConfirm(false); setCurrentView('home'); }} style={{ flex:1, padding:'14px', background:'rgba(207,100,100,0.2)', border:'1px solid rgba(207,100,100,0.35)', borderRadius:'10px', fontSize:'13px', color:'#cf8a8a', fontWeight:500, cursor:'pointer', fontFamily:'"Fira Code", monospace' }}>Sign Out</button>
+          </div>
+        </div>
+      )}
+      <div style={{ height:'20px' }} />
+    </div>
+  );
+
+  // ── HOME VIEW ──────────────────────────────────────────────────────────────
+  const HomeView = () => {
+    const firstName = user.name.split(' ')[0];
+    const greeting = demoTime==='morning'
+      ? { symbol:'☀️', text:`Good morning, ${firstName}`, sub:'Capture your dreams before they fade' }
+      : demoTime==='afternoon'
+      ? { symbol:'🌤',  text:`Good afternoon, ${firstName}`, sub:"How's your day going?" }
+      : { symbol:'🌙', text:`Good evening, ${firstName}`,   sub:'Time to reflect on your day' };
+
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:'24px' }}>
+        <div style={{ textAlign:'center', paddingTop:'60px', fontFamily:'"Fira Code", monospace' }}>
+          <span style={{ fontSize:'40px', display:'block', marginBottom:'16px' }}>{greeting.symbol}</span>
+          <h1 style={{ fontSize:'22px', fontWeight:500, color:theme.text, margin:'0 0 8px 0', letterSpacing:'-0.01em' }}>{greeting.text}</h1>
+          <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:'0 0 24px 0' }}>{greeting.sub}</p>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:theme.card, border:`1px solid ${theme.subtle}`, borderRadius:'10px', padding:'10px 18px' }}>
+            <span style={{ fontSize:'16px' }}>🔥</span>
+            <span style={{ fontSize:'14px', color:theme.accent, fontWeight:500 }}>{streak} day streak</span>
+          </div>
+        </div>
+
+        {demoTime==='morning' && (
+          <div style={{ background:theme.card, borderRadius:'16px', padding:'24px', border:`1px solid ${theme.subtle}` }}>
+            {!dreamSubmitted ? (
+              <>
+                <h2 style={{ fontFamily:'"Fira Code", monospace', fontSize:'15px', fontWeight:500, color:theme.text, margin:'0 0 4px 0' }}>What did you dream about?</h2>
+                <p style={{ fontFamily:'"Fira Code", monospace', fontSize:'12px', color:theme.text, opacity:0.4, margin:'0 0 16px 0' }}>Even fragments help you remember better</p>
+                <textarea ref={dreamRef} placeholder="I dreamed that..." rows={4} style={{ width:'100%', padding:'16px', border:`1px solid ${theme.subtle}`, borderRadius:'12px', fontFamily:'"Fira Code", monospace', fontSize:'14px', lineHeight:1.7, color:theme.text, background:theme.bg, resize:'none', outline:'none', boxSizing:'border-box' }} />
+                <div style={{ display:'flex', gap:'8px', marginTop:'14px', flexWrap:'wrap' }}>
+                  <Chip text="I was flying..." onClick={() => { if(dreamRef.current) dreamRef.current.value='I was flying...'; }} />
+                  <Chip text="I felt..." onClick={() => { if(dreamRef.current) dreamRef.current.value='I felt...'; }} />
+                  <Chip text="Can't remember" onClick={() => { if(dreamRef.current) dreamRef.current.value="Can't remember any dreams today."; }} />
+                </div>
+                <button onClick={() => { const v=dreamRef.current?.value||''; if(v.trim()){ setDreamText(v); setDreamSubmitted(true); } }} style={{ marginTop:'20px', width:'100%', padding:'16px', background:`linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color:theme.bg, border:'none', borderRadius:'12px', fontFamily:'"Fira Code", monospace', fontSize:'14px', fontWeight:500, cursor:'pointer' }}>
+                  Lock it in →
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign:'center', padding:'20px 0', fontFamily:'"Fira Code", monospace' }}>
+                <span style={{ fontSize:'40px', display:'block', marginBottom:'16px' }}>✨</span>
+                <h2 style={{ fontSize:'18px', fontWeight:500, color:theme.text, margin:'0 0 8px 0' }}>Dream captured!</h2>
+                <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:'0 0 20px 0' }}>The more you record, the more you'll remember</p>
+                <div style={{ background:theme.bg, border:`1px solid ${theme.subtle}`, borderRadius:'12px', padding:'16px', textAlign:'left', color:theme.text, fontSize:'13px', lineHeight:1.6, opacity:0.8 }}>{dreamText}</div>
+                <button onClick={() => setDreamSubmitted(false)} style={{ marginTop:'16px', background:'transparent', border:`1px solid ${theme.subtle}`, borderRadius:'10px', padding:'10px 20px', fontSize:'13px', color:theme.text, opacity:0.7, cursor:'pointer', fontFamily:'"Fira Code", monospace' }}>Edit</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {demoTime==='afternoon' && (
+          <div style={{ background:theme.card, borderRadius:'16px', padding:'24px', border:`1px solid ${theme.subtle}`, fontFamily:'"Fira Code", monospace' }}>
+            {!showAISuggestions ? (
+              <div style={{ textAlign:'center', padding:'20px 0' }}>
+                <span style={{ fontSize:'40px', display:'block', marginBottom:'16px' }}>✨</span>
+                <h2 style={{ fontSize:'17px', fontWeight:500, color:theme.text, margin:'0 0 8px 0' }}>Get personalized ideas</h2>
+                <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:'0 auto 24px', lineHeight:1.6, maxWidth:'280px' }}>We'll look at your dreams, reflections, and notes to suggest ideas for today</p>
+                <button onClick={() => { setShowAISuggestions(true); generateAISuggestions(); }} style={{ background:`linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color:theme.bg, border:'none', borderRadius:'12px', padding:'16px 32px', fontSize:'14px', fontWeight:500, cursor:'pointer', fontFamily:'"Fira Code", monospace' }}>Show me →</button>
+              </div>
+            ) : aiLoading ? (
+              <div style={{ textAlign:'center', padding:'40px 0' }}>
+                <div style={{ width:'40px', height:'40px', border:`3px solid ${theme.subtle}`, borderTopColor:theme.accent, borderRadius:'50%', margin:'0 auto 20px', animation:'spin 1s linear infinite' }} />
+                <p style={{ fontSize:'13px', color:theme.text, opacity:0.6 }}>Looking through your journal...</p>
+              </div>
+            ) : aiSuggestions && (
+              <>
+                <div style={{ background:`${theme.accent}12`, borderRadius:'12px', padding:'18px', marginBottom:'20px', borderLeft:`3px solid ${theme.accent}` }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px' }}>
+                    <span>🔮</span>
+                    <span style={{ fontSize:'11px', color:theme.accent, textTransform:'uppercase', letterSpacing:'0.08em' }}>Pattern noticed</span>
+                  </div>
+                  <p style={{ fontSize:'13px', color:theme.text, margin:0, lineHeight:1.6, opacity:0.85 }}>{aiSuggestions.insight}</p>
+                </div>
+                <h3 style={{ fontSize:'13px', color:theme.text, margin:'0 0 14px 0', opacity:0.6 }}>Ideas for today</h3>
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px', marginBottom:'24px' }}>
+                  {aiSuggestions.goals.map((g,i) => (
+                    <div key={i} onClick={() => setSelectedGoal(selectedGoal===i?null:i)} style={{ background:selectedGoal===i?`${theme.accent}15`:theme.subtle, border:`1px solid ${selectedGoal===i?theme.accent:theme.card}`, borderRadius:'12px', padding:'16px', cursor:'pointer', transition:'all 0.2s ease' }}>
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:'12px' }}>
+                        <span style={{ fontSize:'20px' }}>{g.icon}</span>
+                        <div style={{ flex:1 }}>
+                          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                            <h4 style={{ fontSize:'14px', color:theme.text, margin:0, fontWeight:500 }}>{g.title}</h4>
+                            {selectedGoal===i && <span style={{ background:theme.accent, color:theme.bg, fontSize:'10px', padding:'4px 10px', borderRadius:'6px' }}>Today's goal</span>}
+                          </div>
+                          <p style={{ fontSize:'12px', color:theme.text, opacity:0.7, margin:'0 0 8px 0', lineHeight:1.5 }}>{g.description}</p>
+                          <p style={{ fontSize:'11px', color:theme.accent, margin:0, opacity:0.8 }}>💡 {g.why}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <h3 style={{ fontSize:'13px', color:theme.text, margin:'0 0 14px 0', opacity:0.6 }}>Questions to ponder</h3>
+                <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'20px' }}>
+                  {aiSuggestions.reflection_prompts.map((p,i) => <div key={i} style={{ background:theme.subtle, borderRadius:'10px', padding:'14px 16px', fontSize:'13px', color:theme.text, opacity:0.8, lineHeight:1.5, fontStyle:'italic' }}>"{p}"</div>)}
+                </div>
+                <button onClick={generateAISuggestions} style={{ width:'100%', background:'transparent', border:`1px solid ${theme.subtle}`, borderRadius:'10px', padding:'14px', fontSize:'13px', color:theme.text, opacity:0.7, cursor:'pointer', fontFamily:'"Fira Code", monospace', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>
+                  <span>↻</span> Get new ideas
+                </button>
+              </>
+            )}
+            <div style={{ marginTop:'24px', paddingTop:'24px', borderTop:`1px solid ${theme.subtle}` }}>
+              <p style={{ fontSize:'12px', color:theme.text, opacity:0.5, margin:'0 0 12px 0' }}>Capture a quick thought</p>
+              <div style={{ display:'flex', gap:'10px' }}>
+                <input type="text" value={quickNote} onChange={e => setQuickNote(e.target.value)} placeholder="What's on your mind..." style={{ flex:1, padding:'14px 16px', border:`1px solid ${theme.subtle}`, borderRadius:'10px', fontFamily:'"Fira Code", monospace', fontSize:'13px', color:theme.text, background:theme.bg, outline:'none' }} />
+                <button style={{ background:theme.accent, color:theme.bg, border:'none', borderRadius:'10px', padding:'14px 20px', fontSize:'13px', fontWeight:500, cursor:'pointer', fontFamily:'"Fira Code", monospace' }}>Save</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {demoTime==='evening' && (
+          <div style={{ background:theme.card, borderRadius:'16px', padding:'24px', border:`1px solid ${theme.subtle}` }}>
+            {!eveningSubmitted ? (
+              <>
+                <h2 style={{ fontFamily:'"Fira Code", monospace', fontSize:'15px', fontWeight:500, color:theme.text, margin:'0 0 4px 0' }}>How was your day?</h2>
+                <p style={{ fontFamily:'"Fira Code", monospace', fontSize:'12px', color:theme.text, opacity:0.4, margin:'0 0 16px 0' }}>Reflect on what stood out</p>
+                <textarea ref={eveningRef} placeholder="Today I..." rows={5} style={{ width:'100%', padding:'16px', border:`1px solid ${theme.subtle}`, borderRadius:'12px', fontFamily:'"Fira Code", monospace', fontSize:'14px', lineHeight:1.7, color:theme.text, background:theme.bg, resize:'none', outline:'none', boxSizing:'border-box' }} />
+                <div style={{ display:'flex', gap:'8px', marginTop:'14px', flexWrap:'wrap' }}>
+                  <Chip text="I'm grateful for..." onClick={() => { if(eveningRef.current) eveningRef.current.value="I'm grateful for..."; }} />
+                  <Chip text="Today I learned..." onClick={() => { if(eveningRef.current) eveningRef.current.value='Today I learned...'; }} />
+                  <Chip text="A highlight was..." onClick={() => { if(eveningRef.current) eveningRef.current.value='A highlight was...'; }} />
+                </div>
+                <button onClick={() => { const v=eveningRef.current?.value||''; if(v.trim()){ setEveningText(v); setEveningSubmitted(true); } }} style={{ marginTop:'20px', width:'100%', padding:'16px', background:`linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}cc 100%)`, color:theme.bg, border:'none', borderRadius:'12px', fontFamily:'"Fira Code", monospace', fontSize:'14px', fontWeight:500, cursor:'pointer' }}>
+                  Lock it in →
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign:'center', padding:'20px 0', fontFamily:'"Fira Code", monospace' }}>
+                <span style={{ fontSize:'40px', display:'block', marginBottom:'16px' }}>🌙</span>
+                <h2 style={{ fontSize:'18px', fontWeight:500, color:theme.text, margin:'0 0 8px 0' }}>Day complete!</h2>
+                <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:'0 0 20px 0' }}>Another day of growth recorded. Rest well.</p>
+                <div style={{ background:theme.bg, border:`1px solid ${theme.subtle}`, borderRadius:'12px', padding:'16px', textAlign:'left', color:theme.text, fontSize:'13px', lineHeight:1.6, opacity:0.8 }}>{eveningText}</div>
+                <div style={{ marginTop:'20px', padding:'14px', background:`${theme.accent}15`, border:`1px solid ${theme.accent}30`, borderRadius:'12px', display:'flex', alignItems:'center', justifyContent:'center', gap:'10px' }}>
+                  <span style={{ fontSize:'20px' }}>🔥</span>
+                  <span style={{ fontSize:'15px', color:theme.accent, fontWeight:500 }}>{streak+1} day streak!</span>
+                </div>
+                <button onClick={() => setEveningSubmitted(false)} style={{ marginTop:'16px', background:'transparent', border:`1px solid ${theme.subtle}`, borderRadius:'10px', padding:'10px 20px', fontSize:'13px', color:theme.text, opacity:0.7, cursor:'pointer', fontFamily:'"Fira Code", monospace' }}>Edit</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── GOALS VIEW ─────────────────────────────────────────────────────────────
+  const GoalsView = () => {
+    const toggleMG = id => setAiMicroGoals(g => g.map(x => x.id===id?{...x,completed:!x.completed}:x));
+    const toggleUG = id => setUserGoals(g => g.map(x => x.id===id?{...x,completed:!x.completed}:x));
+    const addUG = () => { if(newGoalText.trim()){ setUserGoals(g=>[...g,{id:Date.now(),text:newGoalText,completed:false}]); setNewGoalText(''); } };
+    const refreshMG = () => { setGeneratingGoals(true); setTimeout(()=>{ generateNewMicroGoals(); setGeneratingGoals(false); },800); };
+    const completed = [...aiMicroGoals,...userGoals].filter(g=>g.completed).length;
+    const total = aiMicroGoals.length + userGoals.length;
+
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:'20px', fontFamily:'"Fira Code", monospace' }}>
+        <div style={{ paddingTop:'60px', textAlign:'center' }}>
+          <h1 style={{ fontSize:'22px', fontWeight:500, color:theme.text, margin:'0 0 8px 0' }}>Today's Goals</h1>
+          <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:0 }}>Small steps, big progress</p>
+        </div>
+        {total>0 && (
+          <div style={{ background:theme.card, borderRadius:'14px', padding:'18px', border:`1px solid ${theme.subtle}` }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px' }}>
+              <span style={{ fontSize:'13px', color:theme.text, opacity:0.7 }}>Progress</span>
+              <span style={{ fontSize:'14px', color:theme.accent, fontWeight:500 }}>{completed}/{total}</span>
+            </div>
+            <div style={{ background:theme.subtle, borderRadius:'100px', height:'8px', overflow:'hidden' }}>
+              <div style={{ width:`${(completed/total)*100}%`, height:'100%', background:`linear-gradient(90deg, ${theme.accent} 0%, ${theme.accent}aa 100%)`, borderRadius:'100px', transition:'width 0.3s ease' }} />
+            </div>
+          </div>
+        )}
+        <div style={{ background:theme.card, borderRadius:'16px', padding:'20px', border:`1px solid ${theme.subtle}` }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
+            <div>
+              <h3 style={{ fontSize:'14px', color:theme.text, margin:'0 0 4px 0', fontWeight:500 }}>✨ Suggested for you</h3>
+              <p style={{ fontSize:'11px', color:theme.text, opacity:0.5, margin:0 }}>Based on your recent entries</p>
+            </div>
+            <button onClick={refreshMG} disabled={generatingGoals} style={{ background:theme.subtle, border:'none', borderRadius:'8px', padding:'8px 12px', fontSize:'12px', color:theme.accent, cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', opacity:generatingGoals?0.5:1 }}>
+              <span style={{ display:'inline-block', animation:generatingGoals?'spin 1s linear infinite':'none' }}>↻</span> Refresh
+            </button>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            {aiMicroGoals.map(g => (
+              <div key={g.id} onClick={()=>toggleMG(g.id)} style={{ background:g.completed?`${theme.accent}15`:theme.subtle, border:`1px solid ${g.completed?theme.accent+'40':'transparent'}`, borderRadius:'12px', padding:'14px 16px', cursor:'pointer', display:'flex', alignItems:'center', gap:'12px', transition:'all 0.2s ease' }}>
+                <div style={{ width:'22px', height:'22px', borderRadius:'6px', border:`2px solid ${g.completed?theme.accent:theme.text+'40'}`, background:g.completed?theme.accent:'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s ease' }}>
+                  {g.completed && <span style={{ color:theme.bg, fontSize:'12px' }}>✓</span>}
+                </div>
+                <span style={{ fontSize:'18px' }}>{g.icon}</span>
+                <div style={{ flex:1 }}>
+                  <span style={{ fontSize:'13px', color:theme.text, opacity:g.completed?0.6:0.9, textDecoration:g.completed?'line-through':'none', lineHeight:1.4, display:'block' }}>{g.text}</span>
+                  {g.source && <span style={{ fontSize:'11px', color:theme.accent, opacity:0.7 }}>{g.source}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background:theme.card, borderRadius:'16px', padding:'20px', border:`1px solid ${theme.subtle}` }}>
+          <h3 style={{ fontSize:'14px', color:theme.text, margin:'0 0 16px 0', fontWeight:500 }}>📋 Your Goals</h3>
+          <div style={{ display:'flex', gap:'10px', marginBottom:userGoals.length>0?'16px':'0' }}>
+            <input type="text" value={newGoalText} onChange={e=>setNewGoalText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addUG()} placeholder="Add a goal for today..." style={{ flex:1, padding:'14px 16px', border:`1px solid ${theme.subtle}`, borderRadius:'10px', fontFamily:'"Fira Code", monospace', fontSize:'13px', color:theme.text, background:theme.bg, outline:'none' }} />
+            <button onClick={addUG} style={{ background:theme.accent, color:theme.bg, border:'none', borderRadius:'10px', padding:'14px 18px', fontSize:'16px', cursor:'pointer' }}>+</button>
+          </div>
+          {userGoals.length>0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+              {userGoals.map(g => (
+                <div key={g.id} onClick={()=>toggleUG(g.id)} style={{ background:g.completed?`${theme.accent}15`:theme.subtle, border:`1px solid ${g.completed?theme.accent+'40':'transparent'}`, borderRadius:'12px', padding:'14px 16px', cursor:'pointer', display:'flex', alignItems:'center', gap:'12px', transition:'all 0.2s ease' }}>
+                  <div style={{ width:'22px', height:'22px', borderRadius:'6px', border:`2px solid ${g.completed?theme.accent:theme.text+'40'}`, background:g.completed?theme.accent:'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    {g.completed && <span style={{ color:theme.bg, fontSize:'12px' }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize:'13px', color:theme.text, opacity:g.completed?0.6:0.9, textDecoration:g.completed?'line-through':'none' }}>{g.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {userGoals.length===0 && <p style={{ fontSize:'12px', color:theme.text, opacity:0.4, margin:'12px 0 0 0', textAlign:'center' }}>No goals yet. What do you want to accomplish today?</p>}
+        </div>
+        {total>0 && completed===total && (
+          <div style={{ background:`linear-gradient(135deg, ${theme.accent}20 0%, ${theme.accent}10 100%)`, borderRadius:'14px', padding:'24px', textAlign:'center', border:`1px solid ${theme.accent}30` }}>
+            <span style={{ fontSize:'32px', display:'block', marginBottom:'12px' }}>🎉</span>
+            <p style={{ fontSize:'15px', color:theme.text, margin:0, fontWeight:500 }}>All goals complete!</p>
+            <p style={{ fontSize:'12px', color:theme.text, opacity:0.6, margin:'8px 0 0 0' }}>You're crushing it today</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── HISTORY VIEW ───────────────────────────────────────────────────────────
+  const HistoryView = () => {
+    const weeks = [];
+    for(let i=0;i<entries.length;i+=7) weeks.push(entries.slice(i,i+7));
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:'24px', fontFamily:'"Fira Code", monospace' }}>
+        <div style={{ paddingTop:'60px', textAlign:'center' }}>
+          <h1 style={{ fontSize:'22px', fontWeight:500, color:theme.text, margin:'0 0 8px 0' }}>History</h1>
+          <p style={{ fontSize:'13px', color:theme.text, opacity:0.5, margin:0 }}>Tap any day to revisit</p>
+        </div>
+        <div style={{ background:theme.card, borderRadius:'16px', padding:'20px', border:`1px solid ${theme.subtle}` }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'14px' }}>
+            {['S','M','T','W','T','F','S'].map((d,i)=><span key={i} style={{ width:'38px', textAlign:'center', fontSize:'11px', color:theme.text, opacity:0.4 }}>{d}</span>)}
+          </div>
+          {weeks.map((week,wi) => (
+            <div key={wi} style={{ display:'flex', justifyContent:'space-between', marginBottom:'8px' }}>
+              {week.map((day,di) => {
+                const isToday = day.date.toDateString()===new Date().toDateString();
+                const hasEntry = !day.empty;
+                const dt = hasEntry ? themes[day.mood] : null;
+                return (
+                  <button key={di} onClick={()=>!day.empty&&setSelectedHistoryDay(day)} disabled={day.empty} style={{ width:'38px', height:'38px', borderRadius:'10px', border:isToday?`2px solid ${theme.accent}`:'1px solid transparent', background:hasEntry?`${dt.accent}35`:theme.subtle, cursor:hasEntry?'pointer':'default', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', color:hasEntry?theme.text:`${theme.text}40`, transition:'all 0.2s ease', fontFamily:'"Fira Code", monospace' }}>
+                    {day.date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        {selectedHistoryDay && (
+          <div style={{ background:theme.card, borderRadius:'16px', padding:'24px', border:`1px solid ${theme.accent}50` }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
+              <h3 style={{ fontSize:'16px', fontWeight:500, color:theme.text, margin:0 }}>{formatDate(selectedHistoryDay.date)}</h3>
+              <span style={{ background:`${themes[selectedHistoryDay.mood].accent}30`, color:themes[selectedHistoryDay.mood].accent, padding:'6px 12px', borderRadius:'8px', fontSize:'12px' }}>{selectedHistoryDay.mood}</span>
+            </div>
+            {selectedHistoryDay.dream && (
+              <div style={{ marginBottom:'18px' }}>
+                <p style={{ fontSize:'11px', color:theme.accent, marginBottom:'8px', textTransform:'uppercase', letterSpacing:'0.08em', opacity:0.8 }}>Dream</p>
+                <p style={{ fontSize:'13px', color:theme.text, margin:0, lineHeight:1.6, opacity:0.85 }}>{selectedHistoryDay.dream}</p>
+              </div>
+            )}
+            <div style={{ marginBottom:'18px' }}>
+              <p style={{ fontSize:'11px', color:theme.accent, marginBottom:'8px', textTransform:'uppercase', letterSpacing:'0.08em', opacity:0.8 }}>Reflection</p>
+              <p style={{ fontSize:'13px', color:theme.text, margin:0, lineHeight:1.6, opacity:0.85 }}>{selectedHistoryDay.reflection}</p>
+            </div>
+            <div style={{ background:theme.subtle, borderRadius:'10px', padding:'14px' }}>
+              <p style={{ fontSize:'11px', color:theme.accent, marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.08em', opacity:0.8 }}>Grateful for</p>
+              <p style={{ fontSize:'13px', color:theme.text, margin:0, opacity:0.8 }}>{selectedHistoryDay.gratitude}</p>
+            </div>
+            <button onClick={()=>setSelectedHistoryDay(null)} style={{ marginTop:'18px', background:'transparent', border:`1px solid ${theme.subtle}`, borderRadius:'10px', padding:'12px 20px', fontSize:'13px', color:theme.text, opacity:0.7, cursor:'pointer', width:'100%', fontFamily:'"Fira Code", monospace' }}>Close</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── WRAPPED VIEW ───────────────────────────────────────────────────────────
+  const WrappedView = () => {
+    const recent = entries.filter(e=>!e.empty).slice(-7);
+    const counts = {};
+    recent.forEach(e=>{ counts[e.mood]=(counts[e.mood]||0)+1; });
+    const topMoods = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(m=>m[0]);
+    const dreamsRemembered = recent.filter(e=>e.dream).length;
+    const totalWords = recent.reduce((acc,e)=>acc+(e.dream?.split(' ').length||0)+(e.reflection?.split(' ').length||0),0);
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:'20px', fontFamily:'"Fira Code", monospace' }}>
+        <div style={{ textAlign:'center', paddingTop:'60px' }}>
+          <p style={{ fontSize:'12px', color:theme.text, opacity:0.4, marginBottom:'8px', textTransform:'uppercase', letterSpacing:'0.1em' }}>This Week</p>
+          <h1 style={{ fontSize:'28px', fontWeight:500, color:theme.text, margin:'0 0 4px 0' }}>✦ Your Wrapped</h1>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px' }}>
+          {[{label:'Days logged',value:recent.length,icon:'📝'},{label:'Dreams',value:dreamsRemembered,icon:'💭'},{label:'Words',value:totalWords,icon:'✏️'},{label:'Streak',value:streak,icon:'🔥'}].map((s,i) => (
+            <div key={i} style={{ background:theme.card, borderRadius:'14px', padding:'20px', textAlign:'center', border:`1px solid ${theme.subtle}` }}>
+              <span style={{ fontSize:'24px', display:'block', marginBottom:'10px' }}>{s.icon}</span>
+              <p style={{ fontSize:'28px', fontWeight:500, color:theme.text, margin:'0 0 4px 0' }}>{s.value}</p>
+              <p style={{ fontSize:'11px', color:theme.text, opacity:0.5, margin:0 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ background:theme.card, borderRadius:'14px', padding:'20px', border:`1px solid ${theme.subtle}` }}>
+          <h3 style={{ fontSize:'14px', fontWeight:500, color:theme.text, margin:'0 0 16px 0' }}>Your vibes this week</h3>
+          <div style={{ display:'flex', gap:'10px', flexWrap:'wrap' }}>
+            {topMoods.map((mood,i)=><span key={i} style={{ background:`${themes[mood].accent}25`, color:themes[mood].accent, padding:'10px 18px', borderRadius:'10px', fontSize:'13px', border:`1px solid ${themes[mood].accent}30` }}>{mood}</span>)}
+          </div>
+        </div>
+        <div style={{ background:`${theme.accent}12`, borderRadius:'14px', padding:'22px', borderLeft:`3px solid ${theme.accent}` }}>
+          <h3 style={{ fontSize:'14px', fontWeight:500, color:theme.accent, margin:'0 0 12px 0', display:'flex', alignItems:'center', gap:'8px' }}><span>✨</span> Weekly Insight</h3>
+          <p style={{ fontSize:'14px', color:theme.text, margin:0, lineHeight:1.7, opacity:0.85 }}>
+            You've been feeling most <span style={{ color:theme.accent, fontWeight:500 }}>{topMoods[0]}</span> this week. Your dreams have featured themes of exploration and freedom. Consider: what new territory are you ready to explore?
+          </p>
+        </div>
+        <div style={{ background:`linear-gradient(135deg, ${theme.accent}20 0%, ${theme.accent}10 100%)`, borderRadius:'14px', padding:'28px', textAlign:'center', border:`1px solid ${theme.accent}30` }}>
+          <span style={{ fontSize:'40px', display:'block', marginBottom:'12px' }}>🔥</span>
+          <p style={{ fontSize:'22px', fontWeight:500, color:theme.text, margin:'0 0 6px 0' }}>{streak} day streak!</p>
+          <p style={{ fontSize:'13px', color:theme.text, opacity:0.6, margin:0 }}>Keep going — you're building something meaningful</p>
+        </div>
+      </div>
+    );
+  };
+
+  // ── RENDER ─────────────────────────────────────────────────────────────────
+  return (
+    <div style={{ minHeight:'100vh', background:theme.bg, fontFamily:'"SF Mono","Fira Code",Consolas,monospace', transition:'background 0.5s ease' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin   { to{transform:rotate(360deg)} }
+        ::placeholder { color:${theme.text}40; }
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:${theme.bg}}
+        ::-webkit-scrollbar-thumb{background:${theme.accent}40;border-radius:3px}
+      `}</style>
+
+      <DemoToggle />
+
+      <div style={{ maxWidth:'480px', margin:'0 auto', padding:'20px 20px 120px 20px' }}>
+        {currentView==='home'    && <HomeView />}
+        {currentView==='goals'   && <GoalsView />}
+        {currentView==='history' && <HistoryView />}
+        {currentView==='wrapped' && <WrappedView />}
+        {currentView==='account' && <AccountView />}
+      </div>
+
+      <NavBar />
+    </div>
+  );
+};
+
+export default DaylightJournal;
